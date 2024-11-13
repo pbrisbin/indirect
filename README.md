@@ -73,7 +73,7 @@ other-project.rules.cwd.matches = "*/other-project"
 
 Rules are made up of objects and operations:
 
-```toml
+```
 some-name.rules.{object}.{operation} = {value}
 ```
 
