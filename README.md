@@ -1,26 +1,32 @@
 # Indirect
 
 Indirect is an executable that can be used to indirectly call other executables.
-It can be useful when can't (or don't want to) change how something is invoked,
-but what finer control over what is actually invoked.
+It can be useful when you can't (or don't want to) change how something is
+invoked, but want finer control over what is actually invoked.
 
 ## Motivating Example
 
 We use [Fourmolu][] to format Haskell code in a large team across a number of
 projects. How that code is formatted differs slightly from version to version,
-so we all have to agree on the version we use -- otherwise two folks working on
+so we all have to agree on the version we use. Otherwise, two folks working on
 the same code over time might repeatedly reformat each others work back and
-forth -- causing confusion and frustration each time.
+forth, causing confusion and frustration each time.
+
+[fourmolu]: #todo
 
 Keeping these versions correct is not trivial. Some editor tooling makes it
 difficult to ensure its "format on save" feature calls a given executable, and
 almost none make it easy to have that executable differ project to project.
 
+There are solutions for this. Nix is the hammer that works for all nails, but
+this project explores a lighter, more surgical solution.
+
 With `indirect` installed and symlinked as the `fourmolu` on `$PATH`, invoking
-naively (as editor tooling will do) will consult a configuration file to
-determine which actual executable to invoke based on some rules. Additionally,
-`indirect` can install the executable if necessary, using the instructions given
-in the same configuration file.
+it naively (as editor tooling will most often do) will consult a configuration
+file to determine which _actual_ executable to invoke.
+
+Additionally, `indirect` can install the executable if necessary, using the
+instructions given in the same configuration file.
 
 ## Installation
 
