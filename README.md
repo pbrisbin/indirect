@@ -79,7 +79,10 @@ some-name.rules.{object}.{operation} = {value}
 
 | Object | Operation | Value    | Description |
 | ---    | ---       | ---      | ---         |
-| `cwd`  | `matches` | `<glob>` | Rules is `true` if the current directory matches `<glob>` |
+| `cwd`  | `matches` | `<glob>` | Rule evaluates as `true` if the current directory matches `<glob>` |
+
+Multiple rules are combined with `AND` semantics. To accomplish an `OR`, define
+multiple stanzas that evaluate differently but apply the same settings.
 
 ---
 
