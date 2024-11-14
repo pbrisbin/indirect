@@ -12,6 +12,7 @@ module Indirect.CLI
 
 import Indirect.Prelude
 
+import Data.List (intercalate)
 import Data.List.NonEmpty (some1)
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..))
@@ -24,7 +25,7 @@ import System.Environment (getExecutablePath)
 
 run :: Config -> IO ()
 run config = do
-  Setup options <- parseCommand
+  Setup options <- parseCommand config
 
   for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
     when (maybe True (name `elem`) options.only) $ do
@@ -56,14 +57,23 @@ data Options = Options
   , force :: Bool
   }
 
-parseCommand :: IO Command
-parseCommand = execParser $ withInfo "" commandParser
+parseCommand :: Config -> IO Command
+parseCommand config =
+  execParser
+    $ withInfo "" footer'
+    $ commandParser footer'
+ where
+  footer'
+    | null names = "Warning: no executables configured"
+    | otherwise = "Configured executables: " <> intercalate ", " names
 
-commandParser :: Parser Command
-commandParser =
+  names = Map.keys config.unwrap
+
+commandParser :: String -> Parser Command
+commandParser footer' =
   subparser
     $ command "setup"
-    $ withInfo "Install and link defined executables"
+    $ withInfo "Install and link defined executables" footer'
     $ Setup
     <$> optionsParser
 
@@ -107,5 +117,5 @@ optionsParser =
           ]
       )
 
-withInfo :: String -> Parser a -> ParserInfo a
-withInfo x p = info (p <**> helper) $ fullDesc <> progDesc x
+withInfo :: String -> String -> Parser a -> ParserInfo a
+withInfo d f p = info (p <**> helper) $ fullDesc <> progDesc d <> footer f
