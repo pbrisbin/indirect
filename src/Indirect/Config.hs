@@ -24,6 +24,7 @@ import Data.Semigroup.Generic
 import Data.Text qualified as T
 import Path (parseAbsFile)
 import System.Directory (doesFileExist)
+import System.Environment (getEnvironment)
 import System.Environment.XDG.BaseDir (getUserConfigDir)
 import System.FilePath ((<.>), (</>))
 import TOML
@@ -61,6 +62,12 @@ resolveConfig rc = do
 
 resolveExecutable :: RawExecutable -> IO Executable
 resolveExecutable re = do
+  env <- map (bimap pack pack) <$> getEnvironment
+
+  let
+    vars :: [(Text, Text)]
+    vars = env <> map (second getLast) (MonoidalMap.toList re.vars)
+
   binaryT <-
     maybe
       (throwIO $ DecodeError [Key "binary"] MissingField)
@@ -74,9 +81,6 @@ resolveExecutable re = do
   Executable
     <$> parseAbsFile (unpack binaryT)
     <*> pure install
- where
-  vars :: [(Text, Text)]
-  vars = map (second getLast) $ MonoidalMap.toList re.vars
 
 interpolate :: [(Text, Text)] -> Text -> Text
 interpolate vs = f . f -- do it twice so that cross-referencing works

@@ -62,7 +62,7 @@ Valid keys in any table are:
 
 ```toml
 [defaults]
-vars.bin = "/home/patrick/.local/bin"
+vars.bin = "${HOME}/.local/bin"
 vars.artifact = "${name}-${version}-linux-x86_64"
 
 binary = "${bin}/${name}-${version}"
