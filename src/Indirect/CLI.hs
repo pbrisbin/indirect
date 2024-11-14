@@ -16,7 +16,7 @@ import Indirect.Prelude
 
 import Data.List (intercalate)
 import Data.Map.Strict qualified as Map
-import Indirect.Config (Config (..))
+import Indirect.Config (Config (..), Executable (..))
 import Indirect.Executable (installExecutable)
 import Indirect.Logging
 import Options.Applicative
@@ -26,30 +26,33 @@ import System.Environment (getExecutablePath)
 
 run :: Config -> IO ()
 run config = do
-  Setup options <- parseCommand config
+  parseCommand config >>= \case
+    List -> do
+      for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
+        putStrLn $ name <> " => " <> toFilePath exe.binary
+    Setup options -> do
+      for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
+        when (maybe True (name `elem`) $ nonEmpty options.only) $ do
+          when options.install $ installExecutable options.force name exe
 
-  for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
-    when (maybe True (name `elem`) $ nonEmpty options.only) $ do
-      when options.install $ installExecutable options.force name exe
+          for_ options.links $ \dir -> do
+            self <- parseAbsFile =<< getExecutablePath
+            link <-
+              (</>)
+                <$> parseAbsDir dir
+                <*> parseRelFile name
 
-      for_ options.links $ \dir -> do
-        self <- parseAbsFile =<< getExecutablePath
-        link <-
-          (</>)
-            <$> parseAbsDir dir
-            <*> parseRelFile name
+            exists <- doesFileExist link
 
-        exists <- doesFileExist link
+            when (exists && options.force) $ do
+              logInfo $ "Removing existing link " <> toFilePath link
+              removeFile link
 
-        when (exists && options.force) $ do
-          logInfo $ "Removing existing link " <> toFilePath link
-          removeFile link
+            when (not exists || options.force) $ do
+              logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
+              createFileLink self link
 
-        when (not exists || options.force) $ do
-          logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
-          createFileLink self link
-
-newtype Command = Setup Options
+data Command = List | Setup Options
 
 data Options = Options
   { links :: Maybe FilePath
@@ -73,10 +76,13 @@ parseCommand config =
 commandParser :: String -> Parser Command
 commandParser footer' =
   subparser
-    $ command "setup"
-    $ withInfo "Link and install configured executables" footer'
-    $ Setup
-    <$> optionsParser
+    $ mconcat
+      [ command "setup"
+          $ withInfo "Link and install configured executables" footer'
+          $ Setup
+          <$> optionsParser
+      , command "ls" $ withInfo "Show configured executables" footer' $ pure List
+      ]
 
 optionsParser :: Parser Options
 optionsParser = do
