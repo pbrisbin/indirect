@@ -28,6 +28,7 @@ library
       Indirect.Config
       Indirect.Executable
       Indirect.Main
+      Indirect.Orphans
       Indirect.Prelude
   other-modules:
       Paths_indirect
@@ -52,12 +53,14 @@ library
   build-depends:
       base <5
     , containers
+    , directory
     , filepath
     , monoidal-containers
     , path
     , path-io
     , semigroups
     , text
+    , toml-reader
     , typed-process
     , xdg-basedir
   default-language: GHC2021

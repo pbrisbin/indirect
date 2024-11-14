@@ -6,6 +6,7 @@ module Indirect.Config
 
 import Indirect.Prelude
 
+import Control.Exception (throwIO)
 import Data.Map.Monoidal.Strict (MonoidalMap)
 import Data.Map.Monoidal.Strict qualified as MonoidalMap
 import Data.Map.Strict (Map)
@@ -14,8 +15,10 @@ import Data.Semigroup (Endo (..))
 import Data.Semigroup.Generic
 import Data.Text qualified as T
 import Path (parseAbsFile)
+import System.Directory (doesFileExist)
 import System.Environment.XDG.BaseDir (getUserConfigDir)
 import System.FilePath ((<.>), (</>))
+import TOML
 
 newtype Config = Config
   { unwrap :: Map String Executable
@@ -58,7 +61,7 @@ interpolate = appEndo . foldMap (\(k, v) -> Endo $ T.replace ("${" <> k <> "}") 
 newtype RawConfig = RawConfig
   { unwrap :: MonoidalMap String RawExecutable
   }
-  deriving newtype (Semigroup)
+  deriving newtype (Semigroup, Monoid, DecodeTOML)
 
 data RawExecutable = RawExecutable
   { vars :: MonoidalMap Text (Last Text)
@@ -68,5 +71,18 @@ data RawExecutable = RawExecutable
   deriving stock (Generic)
   deriving (Semigroup) via (GenericSemigroupMonoid RawExecutable)
 
+instance DecodeTOML RawExecutable where
+  tomlDecoder =
+    RawExecutable
+      <$> getField "vars"
+      <*> getField "binary"
+      <*> getFieldOpt "install"
+
 loadRawConfig :: FilePath -> IO RawConfig
-loadRawConfig = undefined
+loadRawConfig path = do
+  exists <- doesFileExist path
+  if exists
+    then do
+      result <- TOML.decodeFile path
+      either throwIO pure result
+    else pure mempty
