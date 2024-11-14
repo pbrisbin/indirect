@@ -27,6 +27,7 @@ library
       Indirect.CLI
       Indirect.Config
       Indirect.Executable
+      Indirect.Logging
       Indirect.Main
       Indirect.Orphans
       Indirect.Prelude

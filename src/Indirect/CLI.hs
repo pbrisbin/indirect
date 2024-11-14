@@ -16,6 +16,7 @@ import Data.List.NonEmpty (some1)
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..))
 import Indirect.Executable (installExecutable)
+import Indirect.Logging
 import Options.Applicative
 import Path (parseAbsDir, parseAbsFile, parseRelFile, (</>))
 import Path.IO (createFileLink, doesFileExist, removeFile)
@@ -27,8 +28,6 @@ run config = do
 
   for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
     when (maybe True (name `elem`) options.only) $ do
-      putStrLn $ "Setting up " <> name
-
       when options.install $ installExecutable name exe
 
       for_ options.links $ \dir -> do
@@ -41,11 +40,11 @@ run config = do
         exists <- doesFileExist link
 
         when (exists && options.force) $ do
-          putStrLn $ "  => Removing existing link " <> toFilePath link
+          logInfo $ "Removing existing link " <> toFilePath link
           removeFile link
 
         when (not exists || options.force) $ do
-          putStrLn $ "  => Linking " <> toFilePath link <> " to indirect executable"
+          logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
           createFileLink self link
 
 newtype Command = Setup Options
