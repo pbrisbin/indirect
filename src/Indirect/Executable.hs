@@ -4,7 +4,6 @@ module Indirect.Executable
 
 import Indirect.Prelude
 
-import Control.Monad (liftM2)
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..), Executable (..))
 import Path.IO (doesFileExist, executable, getPermissions)
@@ -23,5 +22,9 @@ findExecutable config pgname = do
     pure exe.binary
 
 doesExecutableFileExist :: Path Abs File -> IO Bool
-doesExecutableFileExist path =
-  liftM2 (&&) (doesFileExist path) (executable <$> getPermissions path)
+doesExecutableFileExist path = do
+  exists <- doesFileExist path
+
+  if exists
+    then executable <$> getPermissions path
+    else pure False

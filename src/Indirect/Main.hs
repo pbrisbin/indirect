@@ -14,8 +14,8 @@ import System.Process.Typed (proc, runProcess)
 main :: IO ()
 main = do
   config <- Config.load
-  pgname <- getProgName
-  findExecutable config pgname >>= \case
+  _pgname <- getProgName
+  findExecutable config "fourmolu" >>= \case
     Nothing -> CLI.run
     Just exe -> do
       args <- getArgs
