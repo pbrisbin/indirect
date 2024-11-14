@@ -15,10 +15,9 @@ main :: IO ()
 main = do
   config <- Config.load
   pgname <- getProgName
-
-  case findExecutable config pgname of
+  findExecutable config pgname >>= \case
     Nothing -> CLI.run
     Just exe -> do
       args <- getArgs
-      ec <- runProcess $ proc exe args
+      ec <- runProcess $ proc (toFilePath exe) args
       exitWith ec
