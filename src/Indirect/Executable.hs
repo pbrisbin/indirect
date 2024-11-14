@@ -8,6 +8,7 @@
 -- Portability : POSIX
 module Indirect.Executable
   ( findExecutable
+  , installExecutable
   ) where
 
 import Indirect.Prelude
@@ -21,23 +22,27 @@ import System.Process.Typed (proc, runProcess_)
 findExecutable :: Config -> String -> IO (Maybe (Path Abs File))
 findExecutable config pgname = do
   for (Map.lookup pgname config.unwrap) $ \exe -> do
-    exists <- doesExecutableFileExist exe.binary
-
-    let mInstall = do
-          guard $ not exists
-          exe.install
-
-    for_ mInstall $ \install -> do
-      runProcess_ (proc "sh" ["-c", install])
-      created <- doesExecutableFileExist exe.binary
-      unless created
-        $ die
-        $ "install script for "
-        <> pgname
-        <> " did not create "
-        <> toFilePath exe.binary
-
+    installExecutable pgname exe
     pure exe.binary
+
+installExecutable :: String -> Executable -> IO ()
+installExecutable pgname exe = do
+  exists <- doesExecutableFileExist exe.binary
+
+  let mInstall = do
+        guard $ not exists
+        exe.install
+
+  for_ mInstall $ \install -> do
+    putStrLn $ "  => Installing " <> toFilePath exe.binary
+    runProcess_ $ proc "sh" ["-c", install]
+    created <- doesExecutableFileExist exe.binary
+    unless created
+      $ die
+      $ "install script for "
+      <> pgname
+      <> " did not create "
+      <> toFilePath exe.binary
 
 doesExecutableFileExist :: Path Abs File -> IO Bool
 doesExecutableFileExist path = do
