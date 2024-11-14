@@ -47,13 +47,17 @@ resolveConfig =
     . (.unwrap)
 
 resolveExecutable :: RawExecutable -> IO Executable
-resolveExecutable re = do
-  binary <- parseAbsFile $ unpack $ interpolate vars $ getLast re.binary
-  let install = unpack . interpolate vars . getLast <$> re.install
-  pure Executable {binary, install}
+resolveExecutable re =
+  Executable
+    <$> parseAbsFile (unpack binaryT)
+    <*> pure install
  where
   vars :: [(Text, Text)]
   vars = map (second getLast) $ MonoidalMap.toList re.vars
+
+  binaryT = interpolate vars $ getLast re.binary
+  binaryV = ("binary", binaryT)
+  install = unpack . interpolate (binaryV : vars) . getLast <$> re.install
 
 interpolate :: [(Text, Text)] -> Text -> Text
 interpolate = appEndo . foldMap (\(k, v) -> Endo $ T.replace ("${" <> k <> "}") v)
