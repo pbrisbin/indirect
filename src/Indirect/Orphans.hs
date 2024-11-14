@@ -1,3 +1,11 @@
+-- |
+--
+-- Module      : Indirect.Orphans
+-- Copyright   : (c) 2024 Patrick Brisbin
+-- License     : AGPL-3
+-- Maintainer  : pbrisbin@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Indirect.Orphans () where
