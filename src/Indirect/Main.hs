@@ -1,5 +1,6 @@
 module Indirect.Main
   ( main
+  , mainAs
   ) where
 
 import Indirect.Prelude
@@ -12,11 +13,13 @@ import System.Exit (exitWith)
 import System.Process.Typed (proc, runProcess)
 
 main :: IO ()
-main = do
+main = mainAs =<< getProgName
+
+mainAs :: String -> IO ()
+mainAs progName = do
   config <- Config.load
-  _pgname <- getProgName
-  findExecutable config "fourmolu" >>= \case
-    Nothing -> CLI.run
+  findExecutable config progName >>= \case
+    Nothing -> CLI.run config
     Just exe -> do
       args <- getArgs
       ec <- runProcess $ proc (toFilePath exe) args
