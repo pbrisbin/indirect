@@ -1,3 +1,5 @@
+{-# LANGUAGE ApplicativeDo #-}
+
 -- |
 --
 -- Module      : Indirect.CLI
@@ -13,7 +15,6 @@ module Indirect.CLI
 import Indirect.Prelude
 
 import Data.List (intercalate)
-import Data.List.NonEmpty (some1)
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..))
 import Indirect.Executable (installExecutable)
@@ -28,7 +29,7 @@ run config = do
   Setup options <- parseCommand config
 
   for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
-    when (maybe True (name `elem`) options.only) $ do
+    when (maybe True (name `elem`) $ nonEmpty options.only) $ do
       when options.install $ installExecutable name exe
 
       for_ options.links $ \dir -> do
@@ -51,10 +52,10 @@ run config = do
 newtype Command = Setup Options
 
 data Options = Options
-  { only :: Maybe (NonEmpty String)
-  , install :: Bool
-  , links :: Maybe FilePath
+  { links :: Maybe FilePath
   , force :: Bool
+  , install :: Bool
+  , only :: [String]
   }
 
 parseCommand :: Config -> IO Command
@@ -73,49 +74,45 @@ commandParser :: String -> Parser Command
 commandParser footer' =
   subparser
     $ command "setup"
-    $ withInfo "Install and link defined executables" footer'
+    $ withInfo "Link and install configured executables" footer'
     $ Setup
     <$> optionsParser
 
 optionsParser :: Parser Options
-optionsParser =
-  Options
-    <$> optional
-      ( some1
-          ( option
-              str
-              ( mconcat
-                  [ long "only"
-                  , help "Setup only the given executables"
-                  , metavar "NAME"
-                  ]
-              )
-          )
-      )
-    <*> ( not
-            <$> switch
-              ( mconcat
-                  [ long "no-install"
-                  , help "Don't run executable install stanzas"
-                  ]
-              )
-        )
-    <*> optional
-      ( option
-          str
-          ( mconcat
-              [ long "links"
-              , help "Create symbolic links to the indirect executable as DIRECTORY/NAME"
-              , metavar "DIRECTORY"
-              ]
-          )
-      )
-    <*> switch
-      ( mconcat
-          [ long "force"
-          , help "Create symbolic links even if something exists there"
-          ]
-      )
+optionsParser = do
+  links <-
+    optional
+      $ option str
+      $ mconcat
+        [ long "links"
+        , help "Create symbolic links from DIRECTORY/NAME to indirect"
+        , metavar "DIRECTORY"
+        ]
+
+  force <-
+    switch
+      $ mconcat
+        [ long "force"
+        , help "Create symbolic links even if something exists there"
+        ]
+
+  install <-
+    fmap not
+      $ switch
+      $ mconcat
+        [ long "no-install"
+        , help "Don't pre-install executables"
+        ]
+
+  only <-
+    many
+      $ argument str
+      $ mconcat
+        [ help "Limit setup to the given executables"
+        , metavar "NAME"
+        ]
+
+  pure Options {links, force, install, only}
 
 withInfo :: String -> String -> Parser a -> ParserInfo a
 withInfo d f p = info (p <**> helper) $ fullDesc <> progDesc d <> footer f
