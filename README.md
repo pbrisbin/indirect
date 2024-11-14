@@ -51,12 +51,19 @@ denotes an executable you want `indirect` to manage.
 Valid keys in any table are:
 
 - `vars.x`: any arbitrary `x`, which can then be accessed as `${x}` in the
-  values of other fields. `vars` can reference other `vars`, even those yet to
-  be defined.
-- `binary`: required, absolute path where the _target_ executable lives.
+  values of other fields
+
+  `vars` can reference other `vars`, even those yet to be defined. All
+  environment variables, `name`, and `binary` are also made available for
+  interpolation.
+
+- `binary`: required, absolute path where the _target_ executable lives
+
 - `install`: optional, if defined, and `binary` is not present, this will be
-  executed with `sh -c` to install it. If running this script does not produce
-  an executable file at `binary`, `indirect` will error.
+  executed with `sh -c` to install it
+
+  If running this script does not produce an executable file at `binary`,
+  `indirect` will error
 
 ### Example
 
@@ -74,7 +81,6 @@ install = """
 """
 
 [fourmolu]
-vars.name = "fourmolu"
 vars.version = "0.16.2.0"
 ```
 

@@ -51,7 +51,7 @@ load = do
 resolveConfig :: RawConfig -> IO Config
 resolveConfig rc = do
   fmap (Config . Map.fromList . MonoidalMap.toList)
-    $ traverse (resolveExecutable . (defaults <>))
+    $ MonoidalMap.traverseWithKey (\k -> resolveExecutable k . (defaults <>))
     $ MonoidalMap.filterWithKey (\k _ -> k /= defaultsKey) rc.unwrap
  where
   defaults :: RawExecutable
@@ -60,13 +60,16 @@ resolveConfig rc = do
   defaultsKey :: String
   defaultsKey = "defaults"
 
-resolveExecutable :: RawExecutable -> IO Executable
-resolveExecutable re = do
+resolveExecutable :: String -> RawExecutable -> IO Executable
+resolveExecutable name re = do
   env <- map (bimap pack pack) <$> getEnvironment
 
   let
     vars :: [(Text, Text)]
-    vars = env <> map (second getLast) (MonoidalMap.toList re.vars)
+    vars =
+      env
+        <> [("name", pack name)]
+        <> map (second getLast) (MonoidalMap.toList re.vars)
 
   binaryT <-
     maybe
