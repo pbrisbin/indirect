@@ -71,14 +71,13 @@ executables:
     dependencies:
       - indirect
 
-# tests:
-#   spec:
-#     main: Main.hs
-#     source-dirs: tests
-#     ghc-options: -threaded -rtsopts "-with-rtsopts=-N"
-#     dependencies:
-#       - filepath
-#       - hspec
-#       - hspec-golden
-#       - ronn
-#       - text
+tests:
+  spec:
+    main: Main.hs
+    source-dirs: tests
+    ghc-options: -threaded -rtsopts "-with-rtsopts=-N"
+    dependencies:
+      - hspec
+      - indirect
+      - path
+      - temporary

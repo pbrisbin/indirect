@@ -96,3 +96,35 @@ executable indirect
       base <5
     , indirect
   default-language: GHC2021
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Indirect.Config.ResolveSpec
+      Paths_indirect
+  hs-source-dirs:
+      tests
+  default-extensions:
+      DataKinds
+      DeriveAnyClass
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      GADTs
+      LambdaCase
+      NoFieldSelectors
+      NoImplicitPrelude
+      NoMonomorphismRestriction
+      OverloadedRecordDot
+      OverloadedStrings
+      RecordWildCards
+      TypeFamilies
+  ghc-options: -fignore-optim-changes -fwrite-ide-info -Weverything -Wno-all-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-kind-signatures -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-monomorphism-restriction -Wno-prepositive-qualified-module -Wno-safe -Wno-unsafe -threaded -rtsopts "-with-rtsopts=-N"
+  build-depends:
+      base <5
+    , hspec
+    , indirect
+    , path
+    , temporary
+  default-language: GHC2021
