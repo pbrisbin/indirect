@@ -1,0 +1,73 @@
+name: indirect
+version: 1.0.0.0
+license: AGPL-3
+maintainer: Pat Brisbin
+category: CLI
+github: pbrisbin/indirect
+synopsis: Executable to indirectly run other executables
+description: Please see README.md
+
+extra-doc-files:
+  - README.md
+  - CHANGELOG.md
+
+language: GHC2021
+
+ghc-options:
+  - -fignore-optim-changes
+  - -fwrite-ide-info
+  - -Weverything
+  - -Wno-all-missed-specialisations
+  - -Wno-missing-exported-signatures # re-enables missing-signatures
+  - -Wno-missing-import-lists
+  - -Wno-missing-kind-signatures
+  - -Wno-missing-local-signatures
+  - -Wno-missing-safe-haskell-mode
+  - -Wno-monomorphism-restriction
+  - -Wno-prepositive-qualified-module
+  - -Wno-safe
+  - -Wno-unsafe
+
+dependencies:
+  - base < 5
+
+default-extensions:
+  - DataKinds
+  - DeriveAnyClass
+  - DerivingStrategies
+  - DerivingVia
+  - DuplicateRecordFields
+  - GADTs
+  - LambdaCase
+  - NoFieldSelectors
+  - NoImplicitPrelude
+  - NoMonomorphismRestriction
+  - OverloadedRecordDot
+  - OverloadedStrings
+  - RecordWildCards
+  - TypeFamilies
+
+library:
+  source-dirs: src
+  # dependencies:
+  #   - text
+
+executables:
+  indirect:
+    main: Main.hs
+    source-dirs: app
+    ghc-options: -threaded -rtsopts "-with-rtsopts=-N"
+    dependencies:
+      - indirect
+
+# tests:
+#   spec:
+#     main: Main.hs
+#     source-dirs: tests
+#     ghc-options: -threaded -rtsopts "-with-rtsopts=-N"
+#     dependencies:
+#       - filepath
+#       - hspec
+#       - hspec-golden
+#       - ronn
+#       - text
