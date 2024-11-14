@@ -5,4 +5,4 @@ module Indirect.CLI
 import Indirect.Prelude
 
 run :: IO ()
-run = undefined
+run = putStrLn "Called not symlinked as an executable"

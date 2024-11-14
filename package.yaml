@@ -51,12 +51,14 @@ library:
   source-dirs: src
   dependencies:
     - containers
+    - directory
     - filepath
     - monoidal-containers
     - path
     - path-io
     - semigroups
     - text
+    - toml-reader
     - typed-process
     - xdg-basedir
 
