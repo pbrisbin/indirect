@@ -13,7 +13,7 @@ module Indirect.Prelude
   ) where
 
 import Control.Monad as X (guard, unless, void, when)
-import Data.Bifunctor as X (first, second)
+import Data.Bifunctor as X (bimap, first, second)
 import Data.Bitraversable as X (bimapM)
 import Data.Foldable as X (for_)
 import Data.List.NonEmpty as X (NonEmpty (..), nonEmpty)
