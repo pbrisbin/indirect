@@ -12,5 +12,7 @@ module Indirect.Logging
 
 import Indirect.Prelude
 
+import System.IO (hPutStrLn, stderr)
+
 logInfo :: String -> IO ()
-logInfo x = putStrLn $ "[indirect] " <> x
+logInfo x = hPutStrLn stderr $ "[indirect] " <> x
