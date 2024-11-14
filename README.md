@@ -60,13 +60,13 @@ Available options:
 ```toml
 # ~/.config/indirect/indirect.toml
 
-[fourmolu]
-
-# Arbitrary vars.x can be defined and accessed in any setting string as ${x}
+# The special name defaults apply to all executables
+[defaults]
+# Arbitrary vars.x that can be accessed as ${x} in all string settings
 vars.bin = "/home/patrick/.local/bin"
-vars.name = "fourmolu"
-vars.version = "0.16.2.0"
-vars.artifact = "fourmolu-${version}-linux-x86_64" # vars can reference other vars
+
+# vars can reference other vars, even those not yet defined
+vars.artifact = "${name}-${version}-linux-x86_64"
 
 # Required. This is what will actually be called when indirect is invoked as an
 # executable named "fourmolu"
@@ -79,6 +79,10 @@ install = """
   curl -sSf -L -O https://github.com/${name}/${name}/releases/download/v${version}/${artifact}
   install ${artifact} ${binary}
 """
+
+[fourmolu]
+vars.name = "fourmolu"
+vars.version = "0.16.2.0"
 ```
 
 With this configuration in place, run `indirect setup`:
@@ -86,8 +90,8 @@ With this configuration in place, run `indirect setup`:
 ```console
 % indirect setup --links ~/.local/bin
 Setting up fourmolu
-  => Installing
-  => Linking
+  => Installing /home/patrick/.local/bin/fourmolu-0.16.2.0
+  => Linking /home/patrick/.local/bin/fourmolu to indirect executable
 ```
 
 You'll find a symlink of `fourmolu => indirect`:
@@ -124,9 +128,14 @@ This means you can check in a `.indirect.toml` file into any project:
 vars.version = "0.13.1.0"
 ```
 
-Invoking `fourmolu` form within this directory will now do the Right Thing:
+Invoking `fourmolu` from within this directory will now do the Right Thing:
 
 ```console
+% fourmolu --version
+  => Installing /home/patrick/.local/bin/fourmolu-0.13.1.0
+fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
+using ghc-lib-parser 9.6.2.20230523
+
 % fourmolu --version
 fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
 using ghc-lib-parser 9.6.2.20230523
