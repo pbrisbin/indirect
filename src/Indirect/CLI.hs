@@ -14,12 +14,12 @@ import Indirect.Prelude
 
 import Data.List.NonEmpty (some1)
 import Data.Map.Strict qualified as Map
-import Indirect.Config (Config (..), Executable (..))
+import Indirect.Config (Config (..))
+import Indirect.Executable (installExecutable)
 import Options.Applicative
 import Path (parseAbsDir, parseAbsFile, parseRelFile, (</>))
 import Path.IO (createFileLink, doesFileExist, removeFile)
 import System.Environment (getExecutablePath)
-import System.Process.Typed (proc, runProcess_)
 
 run :: Config -> IO ()
 run config = do
@@ -29,10 +29,7 @@ run config = do
     when (maybe True (name `elem`) options.only) $ do
       putStrLn $ "Setting up " <> name
 
-      for_ exe.install $ \install -> do
-        when options.install $ do
-          putStrLn $ "  => Installing " <> toFilePath exe.binary
-          runProcess_ $ proc "sh" ["-c", install]
+      when options.install $ installExecutable name exe
 
       for_ options.links $ \dir -> do
         self <- parseAbsFile =<< getExecutablePath
