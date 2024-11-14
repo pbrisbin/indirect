@@ -51,7 +51,15 @@ library
   ghc-options: -fignore-optim-changes -fwrite-ide-info -Weverything -Wno-all-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-kind-signatures -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-monomorphism-restriction -Wno-prepositive-qualified-module -Wno-safe -Wno-unsafe
   build-depends:
       base <5
+    , containers
+    , filepath
+    , monoidal-containers
+    , path
+    , path-io
+    , semigroups
+    , text
     , typed-process
+    , xdg-basedir
   default-language: GHC2021
 
 executable indirect

@@ -50,7 +50,15 @@ default-extensions:
 library:
   source-dirs: src
   dependencies:
+    - containers
+    - filepath
+    - monoidal-containers
+    - path
+    - path-io
+    - semigroups
+    - text
     - typed-process
+    - xdg-basedir
 
 executables:
   indirect:
