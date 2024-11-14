@@ -10,7 +10,9 @@ import Data.Map.Monoidal.Strict (MonoidalMap)
 import Data.Map.Monoidal.Strict qualified as MonoidalMap
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Semigroup (Endo (..))
 import Data.Semigroup.Generic
+import Data.Text qualified as T
 import Path (parseAbsFile)
 import System.Environment.XDG.BaseDir (getUserConfigDir)
 import System.FilePath ((<.>), (</>))
@@ -51,7 +53,7 @@ resolveExecutable re = do
   vars = map (second getLast) $ MonoidalMap.toList re.vars
 
 interpolate :: [(Text, Text)] -> Text -> Text
-interpolate = undefined
+interpolate = appEndo . foldMap (\(k, v) -> Endo $ T.replace ("${" <> k <> "}") v)
 
 newtype RawConfig = RawConfig
   { unwrap :: MonoidalMap String RawExecutable
