@@ -6,13 +6,12 @@ module Indirect.Config
 
 import Indirect.Prelude
 
-import Control.Exception (Exception, throwIO)
-import Data.Bitraversable (bimapM)
 import Data.Map.Monoidal.Strict (MonoidalMap)
 import Data.Map.Monoidal.Strict qualified as MonoidalMap
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Semigroup.Generic
+import Path (parseAbsFile)
 import System.Environment.XDG.BaseDir (getUserConfigDir)
 import System.FilePath ((<.>), (</>))
 
@@ -33,23 +32,26 @@ load = do
       <$> loadRawConfig (xdg </> "indirect" <.> "toml")
       <*> loadRawConfig (".indirect" <.> "toml")
 
-  either throwIO pure $ resolveConfig raw
+  resolveConfig raw
 
-newtype ConfigError = ConfigError
-  { unwrap :: Text
-  }
-  deriving stock (Show)
-  deriving anyclass (Exception)
-
-resolveConfig :: RawConfig -> Either ConfigError Config
+resolveConfig :: RawConfig -> IO Config
 resolveConfig =
   fmap (Config . Map.fromList)
     . traverse (secondM resolveExecutable)
     . MonoidalMap.toList
     . (.unwrap)
 
-resolveExecutable :: RawExecutable -> Either ConfigError Executable
-resolveExecutable = undefined
+resolveExecutable :: RawExecutable -> IO Executable
+resolveExecutable re = do
+  binary <- parseAbsFile $ unpack $ interpolate vars $ getLast re.binary
+  let install = unpack . interpolate vars . getLast <$> re.install
+  pure Executable {binary, install}
+ where
+  vars :: [(Text, Text)]
+  vars = map (second getLast) $ MonoidalMap.toList re.vars
+
+interpolate :: [(Text, Text)] -> Text -> Text
+interpolate = undefined
 
 newtype RawConfig = RawConfig
   { unwrap :: MonoidalMap String RawExecutable
@@ -57,15 +59,12 @@ newtype RawConfig = RawConfig
   deriving newtype (Semigroup)
 
 data RawExecutable = RawExecutable
-  { vars :: MonoidalMap Text (Last String)
-  , binary :: Last String
-  , install :: Maybe (Last String)
+  { vars :: MonoidalMap Text (Last Text)
+  , binary :: Last Text
+  , install :: Maybe (Last Text)
   }
   deriving stock (Generic)
   deriving (Semigroup) via (GenericSemigroupMonoid RawExecutable)
 
 loadRawConfig :: FilePath -> IO RawConfig
 loadRawConfig = undefined
-
-secondM :: Applicative f => (b -> f c) -> (a, b) -> f (a, c)
-secondM = bimapM pure
