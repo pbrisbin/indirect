@@ -26,6 +26,9 @@ library
   exposed-modules:
       Indirect.CLI
       Indirect.Config
+      Indirect.Config.Load
+      Indirect.Config.Raw
+      Indirect.Config.Resolve
       Indirect.Executable
       Indirect.Logging
       Indirect.Main
