@@ -48,11 +48,16 @@ load = do
   resolveConfig raw
 
 resolveConfig :: RawConfig -> IO Config
-resolveConfig =
-  fmap (Config . Map.fromList)
-    . traverse (secondM resolveExecutable)
-    . MonoidalMap.toList
-    . (.unwrap)
+resolveConfig rc = do
+  fmap (Config . Map.fromList . MonoidalMap.toList)
+    $ traverse (resolveExecutable . (defaults <>))
+    $ MonoidalMap.filterWithKey (\k _ -> k /= defaultsKey) rc.unwrap
+ where
+  defaults :: RawExecutable
+  defaults = fromMaybe mempty $ MonoidalMap.lookup defaultsKey rc.unwrap
+
+  defaultsKey :: String
+  defaultsKey = "defaults"
 
 resolveExecutable :: RawExecutable -> IO Executable
 resolveExecutable re = do
@@ -90,7 +95,7 @@ data RawExecutable = RawExecutable
   , install :: Maybe (Last Text)
   }
   deriving stock (Generic)
-  deriving (Semigroup) via (GenericSemigroupMonoid RawExecutable)
+  deriving (Semigroup, Monoid) via (GenericSemigroupMonoid RawExecutable)
 
 instance DecodeTOML RawExecutable where
   tomlDecoder =
