@@ -49,8 +49,8 @@ default-extensions:
 
 library:
   source-dirs: src
-  # dependencies:
-  #   - text
+  dependencies:
+    - typed-process
 
 executables:
   indirect:

@@ -24,6 +24,9 @@ source-repository head
 
 library
   exposed-modules:
+      Indirect.CLI
+      Indirect.Config
+      Indirect.Executable
       Indirect.Main
       Indirect.Prelude
   other-modules:
@@ -48,6 +51,7 @@ library
   ghc-options: -fignore-optim-changes -fwrite-ide-info -Weverything -Wno-all-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-kind-signatures -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-monomorphism-restriction -Wno-prepositive-qualified-module -Wno-safe -Wno-unsafe
   build-depends:
       base <5
+    , typed-process
   default-language: GHC2021
 
 executable indirect
