@@ -8,7 +8,6 @@
 -- Portability : POSIX
 module Indirect.Main
   ( main
-  , mainAs
   ) where
 
 import Indirect.Prelude
@@ -21,12 +20,10 @@ import System.Exit (exitWith)
 import System.Process.Typed (proc, runProcess)
 
 main :: IO ()
-main = mainAs =<< getProgName
-
-mainAs :: String -> IO ()
-mainAs progName = do
+main = do
   config <- Config.load
-  findExecutable config progName >>= \case
+  pgname <- getProgName
+  findExecutable config pgname >>= \case
     Nothing -> CLI.run config
     Just exe -> do
       args <- getArgs
