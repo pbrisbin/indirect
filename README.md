@@ -30,15 +30,32 @@ instructions given in the same configuration file.
 
 ## Installation
 
-TODO
+TODO: GitHub releases with macOS/Linux executables.
 
 ## Usage
 
+If invoked as an executable whose name is present in the loaded configuration,
+that configuration is used to install (if necessary) and then invoke that
+executable. Otherwise, there is currently one subcommand, `setup`:
+
 ```console
-TODO
+% indirect setup --help
+Usage: indirect setup [--only NAME [--only NAME]] [--no-install] 
+                      [--links DIRECTORY] [--force]
+
+  Install and link defined executables
+
+Available options:
+  --only NAME              Setup only the given executables
+  --only NAME              Setup only the given executables
+  --no-install             Don't run executable install stanzas
+  --links DIRECTORY        Create symbolic links to the indirect executable as
+                           DIRECTORY/NAME
+  --force                  Create symbolic links even if something exists there
+  -h,--help                Show this help text
 ```
 
-## Configuration
+## User Configuration
 
 ```toml
 # ~/.config/indirect/indirect.toml
@@ -46,43 +63,80 @@ TODO
 [fourmolu]
 
 # Arbitrary vars.x can be defined and accessed in any setting string as ${x}
-vars.bin = "~/.local/bin"
+vars.bin = "/home/patrick/.local/bin"
 vars.name = "fourmolu"
 vars.version = "0.16.2.0"
+vars.artifact = "fourmolu-${version}-linux-x86_64" # vars can reference other vars
 
-# Required
+# Required. This is what will actually be called when indirect is invoked as an
+# executable named "fourmolu"
 binary = "${bin}/${name}-${version}"
 
-# Optional. If defined and binary does not exist, will be invoked to install it
+# Optional. If defined and binary does not exist, this will be invoked to
+# install it
 install = """
-  curl -sSf -L -o ${binary} https://github.com/${name}/${name}/releases/download/v${version}/fourmolu-${version}-linux-x86_64
-  install ${binary} ${bin}/${binary}
+  cd /tmp
+  curl -sSf -L -O https://github.com/${name}/${name}/releases/download/v${version}/${artifact}
+  install ${artifact} ${binary}
 """
-
-# Other keys define overrides which inherit by default
-some-project.vars.version = "0.13.0.1"
-
-# And expect rules to dictate when their settings will be used
-some-project.rules.cwd.matches = "*/some-project"
-
-other-project.version = "0.16.0.0"
-other-project.rules.cwd.matches = "*/other-project"
 ```
 
-### Rules
+With this configuration in place, run `indirect setup`:
 
-Rules are made up of objects and operations:
-
+```console
+% indirect setup --links ~/.local/bin
+Setting up fourmolu
+  => Installing
+  => Linking
 ```
-some-name.rules.{object}.{operation} = {value}
+
+You'll find a symlink of `fourmolu => indirect`:
+
+```console
+% ls -l ~/.local/bin/fourmolu
+lrwxrwxrwx 1 patrick patrick 160 Nov 13 22:20 /home/patrick/.local/bin/fourmolu -> /home/patrick/.local/bin/indirect
 ```
 
-| Object | Operation | Value    | Description |
-| ---    | ---       | ---      | ---         |
-| `cwd`  | `matches` | `<glob>` | Rule evaluates as `true` if the current directory matches `<glob>` |
+Running `fourmolu` will use this executable, which is actually `indirect`. When
+invoked this way, `indirect` will (install if necessary and) act as a
+pass-through to it:
 
-Multiple rules are combined with `AND` semantics. To accomplish an `OR`, define
-multiple stanzas that evaluate differently but apply the same settings.
+```console
+% fourmolu --version
+fourmolu 0.16.2.0 e8aa5a666f94eca63e2d8bb1db80b419484ed61a
+using ghc-lib-parser 9.10.1.20240511
+```
+
+```console
+% ls -l ~/.local/bin/fourmolu-*
+-rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/bin/fourmolu-0.16.2.0
+```
+
+## Project Configuration
+
+Indirect configurations can be merged, with `.indirect.toml` taking precedence
+over the user configuration described above.
+
+This means you can check in a `.indirect.toml` file into any project:
+
+```toml
+[fourmolu]
+vars.version = "0.13.1.0"
+```
+
+Invoking `fourmolu` form within this directory will now do the Right Thing:
+
+```console
+% fourmolu --version
+fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
+using ghc-lib-parser 9.6.2.20230523
+```
+
+```console
+% ls -l ~/.local/bin/fourmolu-*
+-rwxr-xr-x 1 patrick patrick 59604696 Nov 13 22:34 /home/patrick/.local/bin/fourmolu-0.13.1.0
+-rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/bin/fourmolu-0.16.2.0
+```
 
 ---
 
