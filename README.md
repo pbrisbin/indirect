@@ -89,12 +89,11 @@ With this configuration in place, run `indirect setup`:
 
 ```console
 % indirect setup --links ~/.local/bin
-Setting up fourmolu
-  => Installing /home/patrick/.local/bin/fourmolu-0.16.2.0
-  => Linking /home/patrick/.local/bin/fourmolu to indirect executable
+[indirect] Installing /home/patrick/.local/bin/fourmolu-0.16.2.0
+[indirect] Linking /home/patrick/.local/bin/fourmolu to indirect executable
 ```
 
-You'll find a symlink of `fourmolu => indirect`:
+You'll find a symlink from `fourmolu` to `indirect`:
 
 ```console
 % ls -l ~/.local/bin/fourmolu
@@ -121,18 +120,18 @@ using ghc-lib-parser 9.10.1.20240511
 Indirect configurations can be merged, with `.indirect.toml` taking precedence
 over the user configuration described above.
 
-This means you can check in a `.indirect.toml` file into any project:
+This means you can check a `.indirect.toml` file into any project:
 
 ```toml
 [fourmolu]
 vars.version = "0.13.1.0"
 ```
 
-Invoking `fourmolu` from within this directory will now do the Right Thing:
+Invoking `fourmolu` in this directory will now do the _Right Thing_:
 
 ```console
 % fourmolu --version
-  => Installing /home/patrick/.local/bin/fourmolu-0.13.1.0
+[indirect] Installing /home/patrick/.local/bin/fourmolu-0.13.1.0
 fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
 using ghc-lib-parser 9.6.2.20230523
 
