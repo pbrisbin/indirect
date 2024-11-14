@@ -54,6 +54,7 @@ library:
     - directory
     - filepath
     - monoidal-containers
+    - optparse-applicative
     - path
     - path-io
     - semigroups

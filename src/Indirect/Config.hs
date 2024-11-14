@@ -60,7 +60,10 @@ resolveExecutable re =
   install = unpack . interpolate (binaryV : vars) . getLast <$> re.install
 
 interpolate :: [(Text, Text)] -> Text -> Text
-interpolate = appEndo . foldMap (\(k, v) -> Endo $ T.replace ("${" <> k <> "}") v)
+interpolate vs = f . f -- do it twice so that cross-referencing works
+ where
+  f :: Text -> Text
+  f = appEndo $ foldMap (\(k, v) -> Endo $ T.replace ("${" <> k <> "}") v) vs
 
 newtype RawConfig = RawConfig
   { unwrap :: MonoidalMap String RawExecutable

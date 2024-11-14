@@ -4,10 +4,11 @@ module Indirect.Prelude
   , note
   ) where
 
-import Control.Monad as X (guard)
+import Control.Monad as X (guard, unless, void, when)
 import Data.Bifunctor as X (first, second)
 import Data.Bitraversable as X (bimapM)
 import Data.Foldable as X (for_)
+import Data.List.NonEmpty as X (NonEmpty)
 import Data.Semigroup as X (Last (..))
 import Data.Text as X (Text, pack, unpack)
 import Data.Traversable as X (for)
