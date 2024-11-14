@@ -23,15 +23,15 @@ import System.Process.Typed (proc, runProcess_)
 findExecutable :: Config -> String -> IO (Maybe (Path Abs File))
 findExecutable config pgname = do
   for (Map.lookup pgname config.unwrap) $ \exe -> do
-    installExecutable pgname exe
+    installExecutable False pgname exe
     pure exe.binary
 
-installExecutable :: String -> Executable -> IO ()
-installExecutable pgname exe = do
+installExecutable :: Bool -> String -> Executable -> IO ()
+installExecutable force pgname exe = do
   exists <- doesExecutableFileExist exe.binary
 
   let mInstall = do
-        guard $ not exists
+        guard $ not exists || force
         exe.install
 
   for_ mInstall $ \install -> do

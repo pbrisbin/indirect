@@ -30,7 +30,7 @@ run config = do
 
   for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
     when (maybe True (name `elem`) $ nonEmpty options.only) $ do
-      when options.install $ installExecutable name exe
+      when options.install $ installExecutable options.force name exe
 
       for_ options.links $ \dir -> do
         self <- parseAbsFile =<< getExecutablePath
@@ -93,7 +93,7 @@ optionsParser = do
     switch
       $ mconcat
         [ long "force"
-        , help "Create symbolic links even if something exists there"
+        , help "Link and install even if something exists already"
         ]
 
   install <-
