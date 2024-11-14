@@ -32,48 +32,41 @@ instructions given in the same configuration file.
 
 TODO: GitHub releases with macOS/Linux executables.
 
-## Usage
-
-If invoked as an executable whose name is present in the loaded configuration,
-that configuration is used to install (if necessary) and then invoke that
-executable. Otherwise, there is currently one subcommand, `setup`:
-
-```console
-% indirect setup --help
-Usage: indirect setup [--only NAME [--only NAME]] [--no-install] 
-                      [--links DIRECTORY] [--force]
-
-  Install and link defined executables
-
-Available options:
-  --only NAME              Setup only the given executables
-  --only NAME              Setup only the given executables
-  --no-install             Don't run executable install stanzas
-  --links DIRECTORY        Create symbolic links to the indirect executable as
-                           DIRECTORY/NAME
-  --force                  Create symbolic links even if something exists there
-  -h,--help                Show this help text
-```
-
 ## User Configuration
 
+Indirect follows [XDG][], meaning user-configuration most likely occurs in
+`~/.config/indirect/indirect.toml`.
+
+[xdg]: https://specifications.freedesktop.org/basedir-spec/latest/
+
+This file should be a list of [TOML tables][toml-table]. The table's name
+denotes an executable you want `indirect` to manage.
+
+> [!IMPORTANT]
+> The special table name `defaults`, if present, will be used as a base for all
+> other defined tables.
+
+[toml-table]: https://toml.io/en/v1.0.0#table
+
+Valid keys in any table are:
+
+- `vars.x`: any arbitrary `x`, which can then be accessed as `${x}` in the
+  values of other fields. `vars` can reference other `vars`, even those yet to
+  be defined.
+- `binary`: required, absolute path where the _target_ executable lives.
+- `install`: optional, if defined, and `binary` is not present, this will be
+  executed with `sh -c` to install it. If running this script does not produce
+  an executable file at `binary`, `indirect` will error.
+
+### Example
+
 ```toml
-# ~/.config/indirect/indirect.toml
-
-# The special name defaults apply to all executables
 [defaults]
-# Arbitrary vars.x that can be accessed as ${x} in all string settings
 vars.bin = "/home/patrick/.local/bin"
-
-# vars can reference other vars, even those not yet defined
 vars.artifact = "${name}-${version}-linux-x86_64"
 
-# Required. This is what will actually be called when indirect is invoked as an
-# executable named "fourmolu"
 binary = "${bin}/${name}-${version}"
 
-# Optional. If defined and binary does not exist, this will be invoked to
-# install it
 install = """
   cd /tmp
   curl -sSf -L -O https://github.com/${name}/${name}/releases/download/v${version}/${artifact}
@@ -85,27 +78,32 @@ vars.name = "fourmolu"
 vars.version = "0.16.2.0"
 ```
 
-With this configuration in place, run `indirect setup`:
+This configuration alone establishes a managed `fourmolu-0.16.2.0` on your
+system. To use this installation, you only need to execute `indirect` as a
+symlink named `fourmolu`.
+
+Setting up that symlink (or copy, or hardlink) can be done manually, or you can
+use our own `setup` sub-command:
 
 ```console
-% indirect setup --links ~/.local/bin
-[indirect] Installing /home/patrick/.local/bin/fourmolu-0.16.2.0
+% indirect setup --links ~/.local/bin --no-install
 [indirect] Linking /home/patrick/.local/bin/fourmolu to indirect executable
 ```
 
-You'll find a symlink from `fourmolu` to `indirect`:
+> [!NOTE]
+> `--no-install` is used here so we can witness on-demand installation later.
+> Run `indirect setup --help` for more details.
 
 ```console
 % ls -l ~/.local/bin/fourmolu
 lrwxrwxrwx 1 patrick patrick 160 Nov 13 22:20 /home/patrick/.local/bin/fourmolu -> /home/patrick/.local/bin/indirect
 ```
 
-Running `fourmolu` will use this executable, which is actually `indirect`. When
-invoked this way, `indirect` will (install if necessary and) act as a
-pass-through to it:
+Running `fourmolu` installs the configured version:
 
 ```console
 % fourmolu --version
+[indirect] Installing /home/patrick/.local/bin/fourmolu-0.16.2.0
 fourmolu 0.16.2.0 e8aa5a666f94eca63e2d8bb1db80b419484ed61a
 using ghc-lib-parser 9.10.1.20240511
 ```
@@ -115,27 +113,34 @@ using ghc-lib-parser 9.10.1.20240511
 -rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/bin/fourmolu-0.16.2.0
 ```
 
+Running `fourmolu` again uses what's already there:
+
+```console
+% fourmolu --version
+fourmolu 0.16.2.0 e8aa5a666f94eca63e2d8bb1db80b419484ed61a
+using ghc-lib-parser 9.10.1.20240511
+```
+
 ## Project Configuration
 
-Indirect configurations can be merged, with `.indirect.toml` taking precedence
-over the user configuration described above.
+This is already quite valuable, but how do we deal with a project that expects a
+different version? Well, Indirect configurations can be merged, and
+`.indirect.toml`, if present, will take precedence over the user configuration
+described above.
 
-This means you can check a `.indirect.toml` file into any project:
+This means you can check a `.indirect.toml` file into any project and use it to
+override some `vars`:
 
 ```toml
 [fourmolu]
 vars.version = "0.13.1.0"
 ```
 
-Invoking `fourmolu` in this directory will now do the _Right Thing_:
+Running `fourmolu` in this directory installs the configured version:
 
 ```console
 % fourmolu --version
 [indirect] Installing /home/patrick/.local/bin/fourmolu-0.13.1.0
-fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
-using ghc-lib-parser 9.6.2.20230523
-
-% fourmolu --version
 fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
 using ghc-lib-parser 9.6.2.20230523
 ```
@@ -146,6 +151,14 @@ using ghc-lib-parser 9.6.2.20230523
 -rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/bin/fourmolu-0.16.2.0
 ```
 
+And again, running it again uses what's already there:
+
+```console
+% fourmolu --version
+fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
+using ghc-lib-parser 9.6.2.20230523
+```
+
 ---
 
-`indirect` is licensed AGPLv3. See [COPYING](./COPYING).
+Indirect is licensed AGPLv3. See [COPYING](./COPYING).
