@@ -15,6 +15,7 @@ import Indirect.Prelude
 
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..), Executable (..))
+import Indirect.Logging
 import Path.IO (doesFileExist, executable, getPermissions)
 import System.Exit (die)
 import System.Process.Typed (proc, runProcess_)
@@ -34,7 +35,7 @@ installExecutable pgname exe = do
         exe.install
 
   for_ mInstall $ \install -> do
-    putStrLn $ "  => Installing " <> toFilePath exe.binary
+    logInfo $ "Installing " <> toFilePath exe.binary
     runProcess_ $ proc "sh" ["-c", install]
     created <- doesExecutableFileExist exe.binary
     unless created
