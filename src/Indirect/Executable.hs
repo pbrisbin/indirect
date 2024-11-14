@@ -15,6 +15,7 @@ import Indirect.Prelude
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..), Executable (..))
 import Path.IO (doesFileExist, executable, getPermissions)
+import System.Exit (die)
 import System.Process.Typed (proc, runProcess_)
 
 findExecutable :: Config -> String -> IO (Maybe (Path Abs File))
@@ -26,7 +27,16 @@ findExecutable config pgname = do
           guard $ not exists
           exe.install
 
-    for_ mInstall $ \install -> runProcess_ (proc "sh" ["-c", install])
+    for_ mInstall $ \install -> do
+      runProcess_ (proc "sh" ["-c", install])
+      created <- doesExecutableFileExist exe.binary
+      unless created
+        $ die
+        $ "install script for "
+        <> pgname
+        <> " did not create "
+        <> toFilePath exe.binary
+
     pure exe.binary
 
 doesExecutableFileExist :: Path Abs File -> IO Bool
