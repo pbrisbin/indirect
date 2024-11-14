@@ -17,7 +17,7 @@ import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..), Executable (..))
 import Options.Applicative
 import Path (parseAbsDir, parseAbsFile, parseRelFile, (</>))
-import Path.IO (createFileLink, doesFileExist)
+import Path.IO (createFileLink, doesFileExist, removeFile)
 import System.Environment (getExecutablePath)
 import System.Process.Typed (proc, runProcess_)
 
@@ -31,7 +31,7 @@ run config = do
 
       for_ exe.install $ \install -> do
         when options.install $ do
-          putStrLn "  => Installing"
+          putStrLn $ "  => Installing " <> toFilePath exe.binary
           runProcess_ $ proc "sh" ["-c", install]
 
       for_ options.links $ \dir -> do
@@ -40,9 +40,15 @@ run config = do
           (</>)
             <$> parseAbsDir dir
             <*> parseRelFile name
+
         exists <- doesFileExist link
+
+        when (exists && options.force) $ do
+          putStrLn $ "  => Removing existing link " <> toFilePath link
+          removeFile link
+
         when (not exists || options.force) $ do
-          putStrLn "  => Linking"
+          putStrLn $ "  => Linking " <> toFilePath link <> " to indirect executable"
           createFileLink self link
 
 newtype Command = Setup Options
