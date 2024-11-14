@@ -47,17 +47,23 @@ resolveConfig =
     . (.unwrap)
 
 resolveExecutable :: RawExecutable -> IO Executable
-resolveExecutable re =
+resolveExecutable re = do
+  binaryT <-
+    maybe
+      (throwIO $ DecodeError [Key "binary"] MissingField)
+      (pure . interpolate vars . getLast)
+      re.binary
+
+  let
+    binaryV = ("binary", binaryT)
+    install = unpack . interpolate (binaryV : vars) . getLast <$> re.install
+
   Executable
     <$> parseAbsFile (unpack binaryT)
     <*> pure install
  where
   vars :: [(Text, Text)]
   vars = map (second getLast) $ MonoidalMap.toList re.vars
-
-  binaryT = interpolate vars $ getLast re.binary
-  binaryV = ("binary", binaryT)
-  install = unpack . interpolate (binaryV : vars) . getLast <$> re.install
 
 interpolate :: [(Text, Text)] -> Text -> Text
 interpolate vs = f . f -- do it twice so that cross-referencing works
@@ -72,7 +78,7 @@ newtype RawConfig = RawConfig
 
 data RawExecutable = RawExecutable
   { vars :: MonoidalMap Text (Last Text)
-  , binary :: Last Text
+  , binary :: Maybe (Last Text)
   , install :: Maybe (Last Text)
   }
   deriving stock (Generic)
@@ -81,8 +87,8 @@ data RawExecutable = RawExecutable
 instance DecodeTOML RawExecutable where
   tomlDecoder =
     RawExecutable
-      <$> getField "vars"
-      <*> getField "binary"
+      <$> getFieldOr mempty "vars"
+      <*> getFieldOpt "binary"
       <*> getFieldOpt "install"
 
 loadRawConfig :: FilePath -> IO RawConfig
