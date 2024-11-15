@@ -48,7 +48,7 @@ run config = do
               logInfo $ "Removing existing link " <> toFilePath link
               removeFile link
 
-            when (not exists || options.force) $ do
+            when ((not exists || options.force) && self /= link) $ do
               logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
               createFileLink self link
 
