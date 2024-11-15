@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 -- |
 --
 -- Module      : Indirect.Orphans
@@ -6,8 +8,6 @@
 -- Maintainer  : pbrisbin@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
-{-# OPTIONS_GHC -Wno-orphans #-}
-
 module Indirect.Orphans () where
 
 import Prelude
