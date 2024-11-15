@@ -8,9 +8,18 @@ let-style: mixed
 in-style: left-align
 single-constraint-parens: never
 single-deriving-parens: never
-reexports: []
-import-grouping: legacy
-local-modules: []
+
+# Unreleased
+import-grouping:
+  - name: "prelude"
+    rules:
+      - glob: "Prelude"
+      - glob: "*.Prelude"
+  - name: "rest"
+    rules:
+      - match: all
+        priority: 100
+
 sort-constraints: true
 sort-derived-classes: true
 sort-deriving-clauses: true
