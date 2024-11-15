@@ -30,7 +30,28 @@ instructions given in the same configuration file.
 
 ## Installation
 
-TODO: GitHub releases with macOS/Linux executables.
+- Download the appropriate binary from the [latest release][releases]
+
+  For example,
+
+  ```console
+  curl -sSf -L -O https://github.com/pbrisbin/indirect/releases/download/v1.0.0.0/indirect-linux-x86_64
+  ```
+
+  [releases]: https://github.com/pbrisbin/indirect/releases
+
+- Make it executable and place it in `$PATH`
+
+  ```console
+  install indirect-linux-x86_64 ~/.local/bin/indirect
+  ```
+
+  Or
+
+  ```console
+  chmod +x indirect-linux-x86_64 ~/.local/bin/indirect
+  mv indirect-linux-x86_64 ~/.local/bin/indirect
+  ```
 
 ## User Configuration
 
