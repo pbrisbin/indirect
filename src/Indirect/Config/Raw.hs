@@ -18,7 +18,7 @@ import Control.Exception (throwIO)
 import Data.Map.Monoidal.Strict (MonoidalMap)
 import Data.Map.Monoidal.Strict qualified as MonoidalMap
 import Data.Semigroup.Generic
-import System.Directory (doesFileExist)
+import Path.IO (doesFileExist)
 import TOML
 
 newtype RawConfig = RawConfig
@@ -41,11 +41,11 @@ instance DecodeTOML RawExecutable where
       <*> getFieldOpt "binary"
       <*> getFieldOpt "install"
 
-loadRawConfig :: FilePath -> IO RawConfig
+loadRawConfig :: Path Abs File -> IO RawConfig
 loadRawConfig path = do
   exists <- doesFileExist path
   if exists
     then do
-      result <- TOML.decodeFile path
+      result <- TOML.decodeFile $ toFilePath path
       either throwIO pure result
     else pure mempty

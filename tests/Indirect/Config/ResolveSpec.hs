@@ -43,4 +43,4 @@ loadConfigLines xs =
   withSystemTempFile "indirect.toml" $ \f h -> do
     hPutStrLn h $ unlines xs
     hClose h
-    resolveConfig =<< loadRawConfig (toFilePath f)
+    resolveConfig =<< loadRawConfig f
