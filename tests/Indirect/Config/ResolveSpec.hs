@@ -11,8 +11,8 @@ import Indirect.Config.Raw
 import Indirect.Config.Resolve
 import Indirect.Executable
 import Path (mkAbsFile)
+import Path.IO (withSystemTempFile)
 import System.IO (hClose, hPutStrLn)
-import System.IO.Temp (withSystemTempFile)
 import Test.Hspec
 
 spec :: Spec
@@ -43,4 +43,4 @@ loadConfigLines xs =
   withSystemTempFile "indirect.toml" $ \f h -> do
     hPutStrLn h $ unlines xs
     hClose h
-    resolveConfig =<< loadRawConfig f
+    resolveConfig =<< loadRawConfig (toFilePath f)

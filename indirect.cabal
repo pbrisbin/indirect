@@ -126,5 +126,5 @@ test-suite spec
     , hspec
     , indirect
     , path
-    , temporary
+    , path-io
   default-language: GHC2021
