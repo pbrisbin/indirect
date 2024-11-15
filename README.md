@@ -12,7 +12,7 @@ so we all have to agree on the version we use. Otherwise, two folks working on
 the same code over time might repeatedly reformat each others work back and
 forth, causing confusion and frustration each time.
 
-[fourmolu]: #todo
+[fourmolu]: https://fourmolu.github.io/
 
 Keeping these versions correct is not trivial. Some editor tooling makes it
 difficult to ensure its "format on save" feature calls a given executable, and
