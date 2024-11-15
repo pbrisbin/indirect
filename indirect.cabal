@@ -57,8 +57,6 @@ library
   build-depends:
       base <5
     , containers
-    , directory
-    , filepath
     , monoidal-containers
     , optparse-applicative
     , path
@@ -67,7 +65,6 @@ library
     , text
     , toml-reader
     , typed-process
-    , xdg-basedir
   default-language: GHC2021
 
 executable indirect

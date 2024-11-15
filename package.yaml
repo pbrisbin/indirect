@@ -51,8 +51,6 @@ library:
   source-dirs: src
   dependencies:
     - containers
-    - directory
-    - filepath
     - monoidal-containers
     - optparse-applicative
     - path
@@ -61,7 +59,6 @@ library:
     - text
     - toml-reader
     - typed-process
-    - xdg-basedir
 
 executables:
   indirect:
