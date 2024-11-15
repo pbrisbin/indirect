@@ -31,7 +31,7 @@ data RawExecutable = RawExecutable
   , binary :: Maybe (Last Text)
   , install :: Maybe (Last Text)
   }
-  deriving stock (Generic)
+  deriving stock Generic
   deriving (Semigroup, Monoid) via (GenericSemigroupMonoid RawExecutable)
 
 instance DecodeTOML RawExecutable where

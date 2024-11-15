@@ -1,0 +1,16 @@
+indentation: 2
+column-limit: 80
+function-arrows: leading
+import-export-style: leading
+record-brace-space: true
+haddock-style: single-line
+let-style: mixed
+in-style: left-align
+single-constraint-parens: never
+single-deriving-parens: never
+reexports: []
+import-grouping: legacy
+local-modules: []
+sort-constraints: true
+sort-derived-classes: true
+sort-deriving-clauses: true
