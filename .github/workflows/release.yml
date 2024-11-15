@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    branches: main
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        uses: freckle/haskell-tag-action@v1
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+
+  create-release:
+    needs: tag
+    if: needs.tag.outputs.tag
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-release
+        uses: freckle/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.tag.outputs.tag }}
+          generate_release_notes: true
+          draft: true
+    outputs:
+      release_id: ${{ steps.create-release.outputs.id }}
+
+  upload-assets:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            suffix: linux-x86_64
+          - os: macOS-latest
+            suffix: darwin-x86_64
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: stack
+        uses: freckle/stack-action@v5
+      - run: |
+          cp -v \
+            '${{ steps.stack.outputs.local-install-root }}/bin/indirect' \
+            'indirect-${{ matrix.suffix }}'
+
+      - uses: freckle/action-gh-release@v2
+        with:
+          id: ${{ needs.create-release.outputs.release_id }}
+          files: 'indirect-${{ matrix.suffix }}'
+          fail_on_unmatched_files: true
+
+  publish-release:
+    needs:
+      - create-release
+      - upload-assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: freckle/action-gh-release@v2
+        with:
+          id: ${{ needs.create-release.outputs.release_id }}
+          draft: false
