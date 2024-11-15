@@ -75,7 +75,6 @@ vars.artifact = "${name}-${version}-linux-x86_64"
 binary = "${bin}/${name}-${version}"
 
 install = """
-  cd /tmp
   curl -sSf -L -O https://github.com/${name}/${name}/releases/download/v${version}/${artifact}
   install ${artifact} ${binary}
 """
