@@ -80,4 +80,4 @@ tests:
       - hspec
       - indirect
       - path
-      - temporary
+      - path-io
