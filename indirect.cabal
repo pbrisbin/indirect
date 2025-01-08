@@ -58,6 +58,7 @@ library
   build-depends:
       base <5
     , containers
+    , escaped
     , monoidal-containers
     , optparse-applicative
     , path
