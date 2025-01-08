@@ -13,6 +13,8 @@ module Indirect.CLI
 import Indirect.Prelude
 
 import Data.Map.Strict qualified as Map
+import Data.Text.Escaped
+import Data.Text.IO qualified as T
 import Indirect.Config (Config (..), Executable (..))
 import Indirect.Executable (installExecutable)
 import Indirect.Logging
@@ -25,17 +27,19 @@ run :: Config -> IO ()
 run config = do
   self <- parseAbsFile =<< getExecutablePath
   options <- parseOptions self
+  renderer <- terminalRenderer
 
   case options.command of
     List -> do
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
         link <- (options.links </>) <$> parseRelFile name
         exists <- doesFileExist link
-        putStrLn
-          $ name
+        T.putStrLn
+          $ renderer
+          $ highlightLinkName link
           <> " => "
-          <> toFilePath exe.binary
-          <> (if exists then "" else " (missing)")
+          <> highlightLinkTarget exe.binary
+          <> (if exists then "" else red " (missing)")
     Setup soptions -> do
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
         when (maybe True (name `elem`) $ nonEmpty soptions.only) $ do
@@ -49,9 +53,13 @@ run config = do
           exists <- doesFileExist link
 
           when (exists && soptions.force) $ do
-            logInfo $ "Removing existing link " <> toFilePath link
+            logInfo $ "Removing existing link " <> highlightLinkName link
             removeFile link
 
           when ((not exists || soptions.force) && self /= link) $ do
-            logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
+            logInfo
+              $ "Linking "
+              <> highlightLinkName link
+              <> " => "
+              <> highlightLinkTarget self
             createFileLink self link

@@ -52,6 +52,7 @@ library:
   source-dirs: src
   dependencies:
     - containers
+    - escaped
     - monoidal-containers
     - optparse-applicative
     - path

@@ -41,7 +41,7 @@ installExecutable force pgname exe = do
         exe.install
 
   for_ mInstall $ \install -> do
-    logInfo $ "Installing " <> toFilePath exe.binary
+    logInfo $ "Installing " <> highlightFile magenta exe.binary
 
     withSystemTempDir "indirect.install" $ \tmp ->
       withCurrentDir tmp $ runProcess_ $ proc "sh" ["-c", install]
