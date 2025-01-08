@@ -19,14 +19,12 @@ import Indirect.Config (Config (..), Executable (..))
 import Indirect.Executable (installExecutable)
 import Indirect.Logging
 import Indirect.Options
-import Path (parseAbsFile, parseRelFile, (</>))
+import Path (parseRelFile, (</>))
 import Path.IO (createFileLink, doesFileExist, removeFile)
-import System.Environment (getExecutablePath)
 
 run :: Config -> IO ()
 run config = do
-  self <- parseAbsFile =<< getExecutablePath
-  options <- parseOptions self
+  options <- parseOptions
   renderer <- terminalRenderer
 
   case options.command of
@@ -56,10 +54,10 @@ run config = do
             logInfo $ "Removing existing link " <> highlightLinkName link
             removeFile link
 
-          when ((not exists || soptions.force) && self /= link) $ do
+          when ((not exists || soptions.force) && soptions.self /= link) $ do
             logInfo
               $ "Linking "
               <> highlightLinkName link
               <> " => "
-              <> highlightLinkTarget self
-            createFileLink self link
+              <> highlightLinkTarget soptions.self
+            createFileLink soptions.self link
