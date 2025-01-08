@@ -112,7 +112,7 @@ Setting up that symlink (or copy, or hardlink) can be done manually, or you can
 use our own `setup` sub-command:
 
 ```console
-% indirect setup --links ~/.local/bin --no-install
+% indirect setup --no-install
 [indirect] Linking /home/patrick/.local/bin/fourmolu to indirect executable
 ```
 
