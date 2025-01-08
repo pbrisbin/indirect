@@ -9,9 +9,6 @@ module Indirect.Options
 
 import Indirect.Prelude
 
-import Data.List (intercalate)
-import Data.Map.Strict qualified as Map
-import Indirect.Config (Config (..))
 import Options.Applicative
 import Path (parent, parseAbsDir)
 
@@ -28,20 +25,14 @@ data SetupOptions = SetupOptions
   , only :: [String]
   }
 
-parseOptions :: Path Abs File -> Config -> IO Options
-parseOptions self config =
+parseOptions :: Path Abs File -> IO Options
+parseOptions self =
   execParser
-    $ withInfo "" footer'
-    $ optionsParser self footer'
- where
-  footer'
-    | null names = "Warning: no executables configured"
-    | otherwise = "Configured executables: " <> intercalate ", " names
+    $ withInfo "Manage indirectly invokable executables"
+    $ optionsParser self
 
-  names = Map.keys config.unwrap
-
-optionsParser :: Path Abs File -> String -> Parser Options
-optionsParser self footer' =
+optionsParser :: Path Abs File -> Parser Options
+optionsParser self =
   Options
     <$> option
       (eitherReader $ first show . parseAbsDir)
@@ -53,17 +44,17 @@ optionsParser self footer' =
           , value (parent self)
           ]
       )
-    <*> commandParser footer'
+    <*> commandParser
 
-commandParser :: String -> Parser Command
-commandParser footer' =
+commandParser :: Parser Command
+commandParser =
   subparser
     $ mconcat
-      [ command "setup"
-          $ withInfo "Link and install configured executables" footer'
+      [ command "ls" $ withInfo "Show configured executables" $ pure List
+      , command "setup"
+          $ withInfo "Link executables and install targets"
           $ Setup
           <$> setupOptionsParser
-      , command "ls" $ withInfo "Show configured executables" footer' $ pure List
       ]
 
 setupOptionsParser :: Parser SetupOptions
@@ -80,7 +71,7 @@ setupOptionsParser = do
       $ switch
       $ mconcat
         [ long "no-install"
-        , help "Don't pre-install executables"
+        , help "Link executables, but don't install targets"
         ]
 
   only <-
@@ -93,5 +84,5 @@ setupOptionsParser = do
 
   pure SetupOptions {force, install, only}
 
-withInfo :: String -> String -> Parser a -> ParserInfo a
-withInfo d f p = info (p <**> helper) $ fullDesc <> progDesc d <> footer f
+withInfo :: String -> Parser a -> ParserInfo a
+withInfo d p = info (p <**> helper) $ fullDesc <> progDesc d
