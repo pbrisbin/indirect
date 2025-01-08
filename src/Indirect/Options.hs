@@ -3,6 +3,7 @@
 module Indirect.Options
   ( Options (..)
   , Command (..)
+  , ListOptions (..)
   , SetupOptions (..)
   , parseOptions
   ) where
@@ -18,7 +19,11 @@ data Options = Options
   , command :: Command
   }
 
-data Command = List | Setup SetupOptions
+data Command = List ListOptions | Setup SetupOptions
+
+newtype ListOptions = ListOptions
+  { only :: [String]
+  }
 
 data SetupOptions = SetupOptions
   { self :: Path Abs File
@@ -53,12 +58,27 @@ commandParser :: Path Abs File -> Parser Command
 commandParser exe =
   subparser
     $ mconcat
-      [ command "ls" $ withInfo "Show configured executables" $ pure List
+      [ command "ls"
+          $ withInfo "Show configured executables"
+          $ List
+          <$> listOptionsParser
       , command "setup"
           $ withInfo "Link executables and install targets"
           $ Setup
           <$> setupOptionsParser exe
       ]
+
+listOptionsParser :: Parser ListOptions
+listOptionsParser = do
+  only <-
+    many
+      $ argument str
+      $ mconcat
+        [ help "Limit setup to the given executables"
+        , metavar "NAME"
+        ]
+
+  pure ListOptions {only}
 
 setupOptionsParser :: Path Abs File -> Parser SetupOptions
 setupOptionsParser exe = do

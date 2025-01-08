@@ -28,16 +28,17 @@ run config = do
   renderer <- terminalRenderer
 
   case options.command of
-    List -> do
+    List loptions -> do
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
-        link <- (options.links </>) <$> parseRelFile name
-        exists <- doesFileExist link
-        T.putStrLn
-          $ renderer
-          $ highlightLinkName link
-          <> " => "
-          <> highlightLinkTarget exe.binary
-          <> (if exists then "" else red " (missing)")
+        when (maybe True (name `elem`) $ nonEmpty loptions.only) $ do
+          link <- (options.links </>) <$> parseRelFile name
+          exists <- doesFileExist link
+          T.putStrLn
+            $ renderer
+            $ highlightLinkName link
+            <> " => "
+            <> highlightLinkTarget exe.binary
+            <> (if exists then "" else red " (missing)")
     Setup soptions -> do
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
         when (maybe True (name `elem`) $ nonEmpty soptions.only) $ do
