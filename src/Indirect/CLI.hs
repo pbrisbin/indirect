@@ -24,7 +24,7 @@ import System.Environment (getExecutablePath)
 run :: Config -> IO ()
 run config = do
   self <- parseAbsFile =<< getExecutablePath
-  options <- parseOptions self config
+  options <- parseOptions self
 
   case options.command of
     List -> do
@@ -39,16 +39,19 @@ run config = do
     Setup soptions -> do
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
         when (maybe True (name `elem`) $ nonEmpty soptions.only) $ do
-          when soptions.install $ do
-            installExecutable soptions.force name exe
+          -- This step creates something like .../tool-0.0.0.1. It is skippable
+          -- by options because it can be slow.
+          when soptions.install $ installExecutable soptions.force name exe
 
-            link <- (options.links </>) <$> parseRelFile name
-            exists <- doesFileExist link
+          -- This step links something like ../tool -> ../indirect. It always
+          -- occurs during setup.
+          link <- (options.links </>) <$> parseRelFile name
+          exists <- doesFileExist link
 
-            when (exists && soptions.force) $ do
-              logInfo $ "Removing existing link " <> toFilePath link
-              removeFile link
+          when (exists && soptions.force) $ do
+            logInfo $ "Removing existing link " <> toFilePath link
+            removeFile link
 
-            when ((not exists || soptions.force) && self /= link) $ do
-              logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
-              createFileLink self link
+          when ((not exists || soptions.force) && self /= link) $ do
+            logInfo $ "Linking " <> toFilePath link <> " to indirect executable"
+            createFileLink self link
