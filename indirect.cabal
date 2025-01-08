@@ -32,6 +32,7 @@ library
       Indirect.Executable
       Indirect.Logging
       Indirect.Main
+      Indirect.Options
       Indirect.Orphans
       Indirect.Prelude
   other-modules:
