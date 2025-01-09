@@ -5,6 +5,7 @@ module Indirect.Options
   , Command (..)
   , ListOptions (..)
   , SetupOptions (..)
+  , CleanOptions (..)
   , parseOptions
   ) where
 
@@ -19,7 +20,10 @@ data Options = Options
   , command :: Command
   }
 
-data Command = List ListOptions | Setup SetupOptions
+data Command
+  = List ListOptions
+  | Setup SetupOptions
+  | Clean CleanOptions
 
 newtype ListOptions = ListOptions
   { only :: [String]
@@ -29,6 +33,10 @@ data SetupOptions = SetupOptions
   { force :: Bool
   , install :: Bool
   , only :: [String]
+  }
+
+newtype CleanOptions = CleanOptions
+  { only :: [String]
   }
 
 parseOptions :: IO Options
@@ -65,6 +73,10 @@ commandParser =
           $ withInfo "Link executables and install targets"
           $ Setup
           <$> setupOptionsParser
+      , command "clean"
+          $ withInfo "Remove links and installed executables"
+          $ Clean
+          <$> cleanOptionsParser
       ]
 
 listOptionsParser :: Parser ListOptions
@@ -105,6 +117,18 @@ setupOptionsParser = do
         ]
 
   pure SetupOptions {force, install, only}
+
+cleanOptionsParser :: Parser CleanOptions
+cleanOptionsParser = do
+  only <-
+    many
+      $ argument str
+      $ mconcat
+        [ help "Limit to the given executable(s)"
+        , metavar "NAME"
+        ]
+
+  pure CleanOptions {only}
 
 withInfo :: String -> Parser a -> ParserInfo a
 withInfo d p = info (p <**> helper) $ fullDesc <> progDesc d

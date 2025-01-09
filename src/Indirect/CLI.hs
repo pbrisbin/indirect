@@ -13,6 +13,7 @@ module Indirect.CLI
 import Indirect.Prelude
 
 import Data.Map.Strict qualified as Map
+import Data.String (fromString)
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
 import Indirect.Config (Config (..), Executable (..))
@@ -20,8 +21,7 @@ import Indirect.Executable (doesExecutableExist, installExecutable)
 import Indirect.Logging
 import Indirect.Options
 import Path (filename, parent, parseRelFile)
-import Data.String (fromString)
-import Path.IO (withCurrentDir, createFileLink, doesFileExist, removeFile)
+import Path.IO (createFileLink, doesFileExist, removeFile, withCurrentDir)
 
 run :: Config -> IO ()
 run config = do
@@ -41,41 +41,53 @@ run config = do
   case options.command of
     List loptions -> do
       forExes loptions.only $ \name exe -> do
-          link <- parseRelFile name
-          exists <- doesFileExist link
-          exeExists <- doesExecutableExist exe
+        link <- parseRelFile name
+        exists <- doesFileExist link
+        exeExists <- doesExecutableExist exe
 
-          T.putStrLn
-            $ renderer
-            $ green (fromString name)
-            <> " => "
-            <> highlightLinkTarget exe.binary
-            <> (if exists then "" else red " (needs link)")
-            <> (if exeExists then "" else yellow " (needs install)")
+        T.putStrLn
+          $ renderer
+          $ green (fromString name)
+          <> " => "
+          <> highlightLinkTarget exe.binary
+          <> (if exists then "" else red " (needs link)")
+          <> (if exeExists then "" else yellow " (needs install)")
     Setup soptions -> do
       forExes soptions.only $ \name exe -> do
-          link <- parseRelFile name
-          exists <- doesFileExist link
+        link <- parseRelFile name
+        exists <- doesFileExist link
 
-          let linkBinary = do
-                logInfo
-                  $ "Linking "
-                  <> green (fromString name)
-                  <> " => "
-                  <> highlightLinkTarget options.self
-                when exists $ removeFile link
-                createFileLink indirect link
+        let linkBinary = do
+              logInfo
+                $ "Linking "
+                <> green (fromString name)
+                <> " => "
+                <> highlightLinkTarget options.self
+              when exists $ removeFile link
+              createFileLink indirect link
 
-          case (exists, soptions.force, link /= indirect) of
-            (_, _, False) -> pure () -- skip due to invalid link
-            (True, False, _) -> pure () -- exists, skip due to no --force
-            (_, True, True) -> linkBinary -- forcing
-            (False, _, True) -> linkBinary -- missing
+        case (exists, soptions.force, link /= indirect) of
+          (_, _, False) -> pure () -- skip due to invalid link
+          (True, False, _) -> pure () -- exists, skip due to no --force
+          (_, True, True) -> linkBinary -- forcing
+          (False, _, True) -> linkBinary -- missing
+        exeExists <- doesExecutableExist exe
 
-          exeExists <- doesExecutableExist exe
+        case (exeExists, soptions.force, soptions.install) of
+          (_, _, False) -> pure () -- skip due to --no-install
+          (True, False, _) -> pure () -- exists, skip to to no --force
+          (_, True, True) -> installExecutable name exe -- forcing
+          (False, _, True) -> installExecutable name exe -- missing
+    Clean coptions -> do
+      forExes coptions.only $ \name exe -> do
+        link <- parseRelFile name
+        exists <- doesFileExist link
+        exeExists <- doesExecutableExist exe
 
-          case (exeExists, soptions.force, soptions.install) of
-            (_, _, False) -> pure () -- skip due to --no-install
-            (True, False, _) -> pure () -- exists, skip to to no --force
-            (_, True, True) -> installExecutable name exe -- forcing
-            (False, _, True) -> installExecutable name exe -- missing
+        when exists $ do
+          logInfo $ "Removing " <> green (fromString name)
+          removeFile link
+
+        when exeExists $ do
+          logInfo $ "Removing " <> green (fromString $ toFilePath exe.binary)
+          removeFile exe.binary

@@ -20,15 +20,16 @@ import Indirect.Prelude
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..), Executable (..))
 import Indirect.Logging
-import Path ((</>), reldir)
+import Path (reldir, (</>))
 import Path.IO
-  ( doesFileExist
+  ( XdgDirectory (..)
+  , createDirIfMissing
+  , doesFileExist
   , executable
   , getPermissions
+  , getXdgDir
   , withCurrentDir
   , withSystemTempDir
-  , getXdgDir
-  , XdgDirectory(..)
   )
 import System.Exit (die)
 import System.Process.Typed (proc, runProcess_)
@@ -43,6 +44,9 @@ findExecutable config pgname = do
 installExecutable :: String -> Executable -> IO ()
 installExecutable pgname exe = do
   for_ exe.install $ \install -> do
+    targets <- getTargetsDir
+    createDirIfMissing True targets
+
     logInfo $ "Installing " <> highlightFile magenta exe.binary
 
     withSystemTempDir "indirect.install" $ \tmp ->
