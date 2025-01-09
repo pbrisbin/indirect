@@ -71,10 +71,11 @@ Valid keys in any table are:
   Typically, `${name}-${version}`
 
 - `install`: optional, if defined, and `binary` is not present, this will be
-  executed with `sh -c` to install it
+  executed with `sh -c` to install it.
 
-  If running this script does not produce an executable file at `binary`,
-  `indirect` will error
+  The desired destination of the binary will be given as `$1` and if running
+  this script does not produce an executable at that location, `indirect` will
+  error.
 
 ### Example
 
@@ -86,7 +87,7 @@ binary = "${name}-${version}"
 
 install = """
   curl -sSf -L -O https://github.com/${name}/${name}/releases/download/v${version}/${artifact}
-  install ${artifact} ${binary}
+  install ${artifact} "$1"
 """
 
 [fourmolu]
@@ -102,7 +103,7 @@ use our own `setup` sub-command:
 
 ```console
 % indirect setup --no-install
-[indirect] Linking /home/patrick/.local/bin/fourmolu to indirect executable
+[indirect] Linking fourmolu to /home/patrick/.local/bin/indirect
 ```
 
 > [!NOTE]
@@ -118,7 +119,7 @@ Running `fourmolu` installs the configured version:
 
 ```console
 % fourmolu --version
-[indirect] Installing /home/patrick/.local/bin/fourmolu-0.16.2.0
+[indirect] Installing /home/patrick/.local/share/indirect/targets/fourmolu-0.16.2.0
 fourmolu 0.16.2.0 e8aa5a666f94eca63e2d8bb1db80b419484ed61a
 using ghc-lib-parser 9.10.1.20240511
 ```
