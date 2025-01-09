@@ -19,8 +19,8 @@ import Data.Map.Strict qualified as Map
 import Data.Semigroup (Endo (..))
 import Data.Text qualified as T
 import Indirect.Config
-import Indirect.Executable (getTargetsDir)
 import Indirect.Config.Raw
+import Indirect.Executable (getTargetsDir)
 import Path (parseAbsFile)
 import System.Environment (getEnvironment)
 import TOML
