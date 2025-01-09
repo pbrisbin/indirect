@@ -52,20 +52,15 @@ installExecutable pgname exe = do
 
     withSystemTempDir "indirect.install" $ \tmp -> do
       withCurrentDir tmp $ do
-        runProcess_ $ proc "sh" ["-c", install]
-        created <- doesExecutableFileExist exe.binary
+        let target = targets </> exe.binary
+        runProcess_ $ proc "sh" ["-c", install, "--", toFilePath target]
+        created <- doesExecutableFileExist target
         unless created
           $ die
           $ "install script for "
           <> pgname
           <> " did not create "
-          <> toFilePath exe.binary
-
-        logInfo
-          $ "Installing "
-          <> highlightFile cyan exe.binary
-          <> " => "
-          <> highlightFile magenta (targets </> exe.binary)
+          <> toFilePath target
 
 doesExecutableExist :: Executable -> IO Bool
 doesExecutableExist exe = do
