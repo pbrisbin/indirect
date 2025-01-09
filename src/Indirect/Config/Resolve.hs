@@ -20,8 +20,7 @@ import Data.Semigroup (Endo (..))
 import Data.Text qualified as T
 import Indirect.Config
 import Indirect.Config.Raw
-import Indirect.Executable (getTargetsDir)
-import Path (parseAbsFile)
+import Path (parseRelFile)
 import System.Environment (getEnvironment)
 import TOML
 
@@ -40,14 +39,12 @@ resolveConfig rc = do
 resolveExecutable :: String -> RawExecutable -> IO Executable
 resolveExecutable name re = do
   env <- map (bimap pack pack) <$> getEnvironment
-  targets <- getTargetsDir
 
   let
     vars :: [(Text, Text)]
     vars =
       env
         <> [("name", pack name)]
-        <> [("targets", pack $ toFilePath targets)]
         <> map (second getLast) (MonoidalMap.toList re.vars)
 
   binaryT <-
@@ -61,7 +58,7 @@ resolveExecutable name re = do
     install = unpack . interpolate (binaryV : vars) . getLast <$> re.install
 
   Executable
-    <$> parseAbsFile (unpack binaryT)
+    <$> parseRelFile (unpack binaryT)
     <*> pure install
 
 interpolate :: [(Text, Text)] -> Text -> Text

@@ -39,7 +39,8 @@ findExecutable config pgname = do
   for (Map.lookup pgname config.unwrap) $ \exe -> do
     exists <- doesExecutableExist exe
     unless exists $ installExecutable pgname exe
-    pure exe.binary
+    targets <- getTargetsDir
+    pure $ targets </> exe.binary
 
 installExecutable :: String -> Executable -> IO ()
 installExecutable pgname exe = do
@@ -49,21 +50,29 @@ installExecutable pgname exe = do
 
     logInfo $ "Installing " <> highlightFile magenta exe.binary
 
-    withSystemTempDir "indirect.install" $ \tmp ->
-      withCurrentDir tmp $ runProcess_ $ proc "sh" ["-c", install]
+    withSystemTempDir "indirect.install" $ \tmp -> do
+      withCurrentDir tmp $ do
+        runProcess_ $ proc "sh" ["-c", install]
+        created <- doesExecutableFileExist exe.binary
+        unless created
+          $ die
+          $ "install script for "
+          <> pgname
+          <> " did not create "
+          <> toFilePath exe.binary
 
-    created <- doesExecutableFileExist exe.binary
-    unless created
-      $ die
-      $ "install script for "
-      <> pgname
-      <> " did not create "
-      <> toFilePath exe.binary
+        logInfo
+          $ "Installing "
+          <> highlightFile cyan exe.binary
+          <> " => "
+          <> highlightFile magenta (targets </> exe.binary)
 
 doesExecutableExist :: Executable -> IO Bool
-doesExecutableExist = doesExecutableFileExist . (.binary)
+doesExecutableExist exe = do
+  targets <- getTargetsDir
+  doesExecutableFileExist $ targets </> exe.binary
 
-doesExecutableFileExist :: Path Abs File -> IO Bool
+doesExecutableFileExist :: Path b File -> IO Bool
 doesExecutableFileExist path = do
   exists <- doesFileExist path
 
