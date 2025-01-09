@@ -19,6 +19,7 @@ import Data.Map.Strict qualified as Map
 import Data.Semigroup (Endo (..))
 import Data.Text qualified as T
 import Indirect.Config
+import Indirect.Executable (getTargetsDir)
 import Indirect.Config.Raw
 import Path (parseAbsFile)
 import System.Environment (getEnvironment)
@@ -39,12 +40,14 @@ resolveConfig rc = do
 resolveExecutable :: String -> RawExecutable -> IO Executable
 resolveExecutable name re = do
   env <- map (bimap pack pack) <$> getEnvironment
+  targets <- getTargetsDir
 
   let
     vars :: [(Text, Text)]
     vars =
       env
         <> [("name", pack name)]
+        <> [("targets", pack $ toFilePath targets)]
         <> map (second getLast) (MonoidalMap.toList re.vars)
 
   binaryT <-
