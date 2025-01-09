@@ -30,28 +30,17 @@ instructions given in the same configuration file.
 
 ## Installation
 
-- Download the appropriate binary from the [latest release][releases]
+```console
+curl --proto '=https' --tlsv1.2 -sSf \
+  https://raw.githubusercontent.com/pbrisbin/indirect/main/install |
+  sh -s -- -p ~/.local
+```
 
-  For example,
+Or download the appropriate binary from the [latest release][releases], make it
+executable, and add it to `$PATH`.
 
-  ```console
-  curl -sSf -L -O https://github.com/pbrisbin/indirect/releases/download/v1.0.0.0/indirect-linux-x86_64
-  ```
+[releases]: https://github.com/pbrisbin/indirect/releases
 
-  [releases]: https://github.com/pbrisbin/indirect/releases
-
-- Make it executable and place it in `$PATH`
-
-  ```console
-  install indirect-linux-x86_64 ~/.local/bin/indirect
-  ```
-
-  Or
-
-  ```console
-  chmod +x indirect-linux-x86_64 ~/.local/bin/indirect
-  mv indirect-linux-x86_64 ~/.local/bin/indirect
-  ```
 
 ## User Configuration
 
