@@ -185,6 +185,48 @@ fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
 using ghc-lib-parser 9.6.2.20230523
 ```
 
+## Usage
+
+```console
+% indirect --help
+Usage: indirect [--links DIRECTORY] COMMAND
+
+  Manage indirectly invokable executables
+
+Available options:
+  --links DIRECTORY        Create symbolic links from DIRECTORY/NAME to indirect
+                           (default: parent of our own executable)
+  -h,--help                Show this help text
+
+Available commands:
+  ls                       Show configured executables
+  setup                    Link executables and install targets
+```
+
+```console
+% indirect ls --help
+Usage: indirect ls [NAME]
+
+  Show configured executables
+
+Available options:
+  NAME                     Limit to the given executable(s)
+  -h,--help                Show this help text
+```
+
+```console
+% indirect setup --help
+Usage: indirect setup [--force] [--no-install] [NAME]
+
+  Link executables and install targets
+
+Available options:
+  --force                  Link and install even if something exists already
+  --no-install             Link executables, but don't install targets
+  NAME                     Limit to the given executable(s)
+  -h,--help                Show this help text
+```
+
 ---
 
 Indirect is licensed AGPLv3. See [COPYING](./COPYING).
