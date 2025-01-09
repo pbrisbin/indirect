@@ -67,7 +67,8 @@ Valid keys in any table are:
   environment variables, `name`, and `binary` are also made available for
   interpolation.
 
-- `binary`: required, absolute path where the _target_ executable lives
+- `binary`: required, relative path to expect the versioned executable target.
+  Typically, `${name}-${version}`
 
 - `install`: optional, if defined, and `binary` is not present, this will be
   executed with `sh -c` to install it
@@ -79,10 +80,9 @@ Valid keys in any table are:
 
 ```toml
 [defaults]
-vars.bin = "${HOME}/.local/bin"
 vars.artifact = "${name}-${version}-linux-x86_64"
 
-binary = "${bin}/${name}-${version}"
+binary = "${name}-${version}"
 
 install = """
   curl -sSf -L -O https://github.com/${name}/${name}/releases/download/v${version}/${artifact}
@@ -111,7 +111,7 @@ use our own `setup` sub-command:
 
 ```console
 % ls -l ~/.local/bin/fourmolu
-lrwxrwxrwx 1 patrick patrick 160 Nov 13 22:20 /home/patrick/.local/bin/fourmolu -> /home/patrick/.local/bin/indirect
+lrwxrwxrwx 1 patrick patrick 160 Nov 13 22:20 /home/patrick/.local/bin/fourmolu -> indirect
 ```
 
 Running `fourmolu` installs the configured version:
@@ -124,8 +124,8 @@ using ghc-lib-parser 9.10.1.20240511
 ```
 
 ```console
-% ls -l ~/.local/bin/fourmolu-*
--rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/bin/fourmolu-0.16.2.0
+% ls -l ~/.local/share/indirect/targets/fourmolu-*
+-rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/share/indirect/targets/fourmolu-0.16.2.0
 ```
 
 Running `fourmolu` again uses what's already there:
@@ -161,9 +161,9 @@ using ghc-lib-parser 9.6.2.20230523
 ```
 
 ```console
-% ls -l ~/.local/bin/fourmolu-*
--rwxr-xr-x 1 patrick patrick 59604696 Nov 13 22:34 /home/patrick/.local/bin/fourmolu-0.13.1.0
--rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/bin/fourmolu-0.16.2.0
+% ls -l ~/.local/share/indirect/fourmolu-*
+-rwxr-xr-x 1 patrick patrick 59604696 Nov 13 22:34 /home/patrick/.local/share/indirect/targets/fourmolu-0.13.1.0
+-rwxr-xr-x 1 patrick patrick 64309880 Nov 13 22:20 /home/patrick/.local/share/indirect/targets/fourmolu-0.16.2.0
 ```
 
 And again, running it again uses what's already there:
@@ -172,48 +172,6 @@ And again, running it again uses what's already there:
 % fourmolu --version
 fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
 using ghc-lib-parser 9.6.2.20230523
-```
-
-## Usage
-
-```console
-% indirect --help
-Usage: indirect [--links DIRECTORY] COMMAND
-
-  Manage indirectly invokable executables
-
-Available options:
-  --links DIRECTORY        Create symbolic links from DIRECTORY/NAME to indirect
-                           (default: parent of our own executable)
-  -h,--help                Show this help text
-
-Available commands:
-  ls                       Show configured executables
-  setup                    Link executables and install targets
-```
-
-```console
-% indirect ls --help
-Usage: indirect ls [NAME]
-
-  Show configured executables
-
-Available options:
-  NAME                     Limit to the given executable(s)
-  -h,--help                Show this help text
-```
-
-```console
-% indirect setup --help
-Usage: indirect setup [--force] [--no-install] [NAME]
-
-  Link executables and install targets
-
-Available options:
-  --force                  Link and install even if something exists already
-  --no-install             Link executables, but don't install targets
-  NAME                     Limit to the given executable(s)
-  -h,--help                Show this help text
 ```
 
 ---
