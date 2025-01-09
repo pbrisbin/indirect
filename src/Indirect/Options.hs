@@ -48,7 +48,7 @@ optionsParser exe =
           [ long "links"
           , help "Create symbolic links from DIRECTORY/NAME to indirect"
           , metavar "DIRECTORY"
-          , showDefault
+          , showDefaultWith (const "parent of our own executable")
           , value (parent exe)
           ]
       )
@@ -74,7 +74,7 @@ listOptionsParser = do
     many
       $ argument str
       $ mconcat
-        [ help "Limit setup to the given executables"
+        [ help "Limit to the given executable(s)"
         , metavar "NAME"
         ]
 
@@ -89,8 +89,8 @@ setupOptionsParser exe = do
           [ long "self"
           , help "Path to indirect executable to link to"
           , metavar "FILE"
-          , showDefault
           , value exe
+          , internal
           ]
       )
   force <-
@@ -112,7 +112,7 @@ setupOptionsParser exe = do
     many
       $ argument str
       $ mconcat
-        [ help "Limit setup to the given executables"
+        [ help "Limit to the given executable(s)"
         , metavar "NAME"
         ]
 
