@@ -23,7 +23,7 @@ spec = do
       config <-
         loadConfigLines
           [ "[defaults]"
-          , "binary = \"${targets}/${name}-${version}\""
+          , "binary = \"${name}-${version}\""
           , ""
           , "[foo]"
           , "vars.version = \"0.1.0.0\""
