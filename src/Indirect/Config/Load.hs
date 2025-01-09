@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 -- |
 --
@@ -17,7 +17,7 @@ import Indirect.Prelude
 import Indirect.Config
 import Indirect.Config.Raw
 import Indirect.Config.Resolve
-import Path (mkAbsDir, mkRelDir, mkRelFile, (</>))
+import Path (absdir, reldir, relfile, (</>))
 import Path qualified
 import Path.IO (XdgDirectory (..), doesFileExist, getCurrentDir, getXdgDir)
 
@@ -34,11 +34,11 @@ loadConfig = do
 
 getUserConfig :: IO (Path Abs File)
 getUserConfig = do
-  xdg <- getXdgDir XdgConfig $ Just $(mkRelDir "indirect")
-  pure $ xdg </> $(mkRelFile "indirect.toml")
+  xdg <- getXdgDir XdgConfig $ Just [reldir|indirect|]
+  pure $ xdg </> [relfile|indirect.toml|]
 
 getProjectConfig :: IO (Maybe (Path Abs File))
-getProjectConfig = locateInParents $(mkRelFile ".indirect.toml")
+getProjectConfig = locateInParents [relfile|.indirect.toml|]
 
 locateInParents :: Path Rel File -> IO (Maybe (Path Abs File))
 locateInParents path = go =<< getCurrentDir
@@ -55,4 +55,4 @@ locateInParents path = go =<< getCurrentDir
 
 -- NB. unclear if this works for windows
 root :: Path Abs Dir
-root = $(mkAbsDir "/")
+root = [absdir|/|]
