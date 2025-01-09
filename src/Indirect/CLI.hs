@@ -16,49 +16,66 @@ import Data.Map.Strict qualified as Map
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
 import Indirect.Config (Config (..), Executable (..))
-import Indirect.Executable (installExecutable)
+import Indirect.Executable (doesExecutableExist, installExecutable)
 import Indirect.Logging
 import Indirect.Options
-import Path (parseRelFile, (</>))
-import Path.IO (createFileLink, doesFileExist, removeFile)
+import Path (filename, parent, parseRelFile)
+import Data.String (fromString)
+import Path.IO (withCurrentDir, createFileLink, doesFileExist, removeFile)
 
 run :: Config -> IO ()
 run config = do
   options <- parseOptions
   renderer <- terminalRenderer
 
+  let
+    bin = parent options.self
+    indirect = filename options.self
+
+    forExes only f =
+      for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
+        when (maybe True (name `elem`) $ nonEmpty only)
+          $ withCurrentDir bin
+          $ f name exe
+
   case options.command of
     List loptions -> do
-      for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
-        when (maybe True (name `elem`) $ nonEmpty loptions.only) $ do
-          link <- (options.links </>) <$> parseRelFile name
+      forExes loptions.only $ \name exe -> do
+          link <- parseRelFile name
           exists <- doesFileExist link
+          exeExists <- doesExecutableExist exe
+
           T.putStrLn
             $ renderer
-            $ highlightLinkName link
+            $ green (fromString name)
             <> " => "
             <> highlightLinkTarget exe.binary
-            <> (if exists then "" else red " (missing)")
+            <> (if exists then "" else red " (needs link)")
+            <> (if exeExists then "" else yellow " (needs install)")
     Setup soptions -> do
-      for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
-        when (maybe True (name `elem`) $ nonEmpty soptions.only) $ do
-          -- This step creates something like .../tool-0.0.0.1. It is skippable
-          -- by options because it can be slow.
-          when soptions.install $ installExecutable soptions.force name exe
-
-          -- This step links something like ../tool -> ../indirect. It always
-          -- occurs during setup.
-          link <- (options.links </>) <$> parseRelFile name
+      forExes soptions.only $ \name exe -> do
+          link <- parseRelFile name
           exists <- doesFileExist link
 
-          when (exists && soptions.force) $ do
-            logInfo $ "Removing existing link " <> highlightLinkName link
-            removeFile link
+          let linkBinary = do
+                logInfo
+                  $ "Linking "
+                  <> green (fromString name)
+                  <> " => "
+                  <> highlightLinkTarget options.self
+                when exists $ removeFile link
+                createFileLink indirect link
 
-          when ((not exists || soptions.force) && soptions.self /= link) $ do
-            logInfo
-              $ "Linking "
-              <> highlightLinkName link
-              <> " => "
-              <> highlightLinkTarget soptions.self
-            createFileLink soptions.self link
+          case (exists, soptions.force, link /= indirect) of
+            (_, _, False) -> pure () -- skip due to invalid link
+            (True, False, _) -> pure () -- exists, skip due to no --force
+            (_, True, True) -> linkBinary -- forcing
+            (False, _, True) -> linkBinary -- missing
+
+          exeExists <- doesExecutableExist exe
+
+          case (exeExists, soptions.force, soptions.install) of
+            (_, _, False) -> pure () -- skip due to --no-install
+            (True, False, _) -> pure () -- exists, skip to to no --force
+            (_, True, True) -> installExecutable name exe -- forcing
+            (False, _, True) -> installExecutable name exe -- missing

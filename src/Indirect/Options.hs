@@ -11,11 +11,11 @@ module Indirect.Options
 import Indirect.Prelude
 
 import Options.Applicative
-import Path (parent, parseAbsDir, parseAbsFile)
+import Path (parseAbsFile)
 import System.Environment (getExecutablePath)
 
 data Options = Options
-  { links :: Path Abs Dir
+  { self :: Path Abs File
   , command :: Command
   }
 
@@ -26,8 +26,7 @@ newtype ListOptions = ListOptions
   }
 
 data SetupOptions = SetupOptions
-  { self :: Path Abs File
-  , force :: Bool
+  { force :: Bool
   , install :: Bool
   , only :: [String]
   }
@@ -43,19 +42,19 @@ optionsParser :: Path Abs File -> Parser Options
 optionsParser exe =
   Options
     <$> option
-      (eitherReader $ first show . parseAbsDir)
+      (eitherReader $ first show . parseAbsFile)
       ( mconcat
-          [ long "links"
-          , help "Create symbolic links from DIRECTORY/NAME to indirect"
-          , metavar "DIRECTORY"
-          , showDefaultWith (const "parent of our own executable")
-          , value (parent exe)
+          [ long "self"
+          , help "Path to indirect executable to link to"
+          , metavar "FILE"
+          , value exe
+          , internal
           ]
       )
-    <*> commandParser exe
+    <*> commandParser
 
-commandParser :: Path Abs File -> Parser Command
-commandParser exe =
+commandParser :: Parser Command
+commandParser =
   subparser
     $ mconcat
       [ command "ls"
@@ -65,7 +64,7 @@ commandParser exe =
       , command "setup"
           $ withInfo "Link executables and install targets"
           $ Setup
-          <$> setupOptionsParser exe
+          <$> setupOptionsParser
       ]
 
 listOptionsParser :: Parser ListOptions
@@ -80,19 +79,8 @@ listOptionsParser = do
 
   pure ListOptions {only}
 
-setupOptionsParser :: Path Abs File -> Parser SetupOptions
-setupOptionsParser exe = do
-  self <-
-    option
-      (eitherReader $ first show . parseAbsFile)
-      ( mconcat
-          [ long "self"
-          , help "Path to indirect executable to link to"
-          , metavar "FILE"
-          , value exe
-          , internal
-          ]
-      )
+setupOptionsParser :: Parser SetupOptions
+setupOptionsParser = do
   force <-
     switch
       $ mconcat
@@ -116,7 +104,7 @@ setupOptionsParser exe = do
         , metavar "NAME"
         ]
 
-  pure SetupOptions {self, force, install, only}
+  pure SetupOptions {force, install, only}
 
 withInfo :: String -> Parser a -> ParserInfo a
 withInfo d p = info (p <**> helper) $ fullDesc <> progDesc d
