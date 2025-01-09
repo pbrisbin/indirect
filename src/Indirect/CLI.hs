@@ -17,10 +17,14 @@ import Data.String (fromString)
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
 import Indirect.Config (Config (..), Executable (..))
-import Indirect.Executable (doesExecutableExist, installExecutable)
+import Indirect.Executable
+  ( doesExecutableExist
+  , getTargetsDir
+  , installExecutable
+  )
 import Indirect.Logging
 import Indirect.Options
-import Path (filename, parent, parseRelFile)
+import Path (filename, parent, parseRelFile, (</>))
 import Path.IO (createFileLink, doesFileExist, removeFile, withCurrentDir)
 
 run :: Config -> IO ()
@@ -44,14 +48,14 @@ run config = do
         link <- parseRelFile name
         exists <- doesFileExist link
         exeExists <- doesExecutableExist exe
+        targets <- getTargetsDir
+        let target = targets </> exe.binary
 
         T.putStrLn
           $ renderer
           $ green (fromString name)
-          <> " => "
-          <> highlightLinkTarget exe.binary
-          <> (if exists then "" else red " (needs link)")
-          <> (if exeExists then "" else yellow " (needs install)")
+          <> (if exists then " => " <> cyan "indirect" else "")
+          <> (if exeExists then " => " <> highlightLinkTarget target else "")
     Setup soptions -> do
       forExes soptions.only $ \name exe -> do
         link <- parseRelFile name
