@@ -93,5 +93,7 @@ run config = do
           removeFile link
 
         when execExists $ do
-          logInfo $ "Removing " <> green (fromString $ toFilePath exe.binary)
-          removeFile exe.binary
+          targets <- getTargetsDir
+          let target = targets </> exe.binary
+          logInfo $ "Removing " <> highlightLinkTarget target
+          removeFile target
