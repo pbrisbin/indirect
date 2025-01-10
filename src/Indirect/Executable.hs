@@ -23,8 +23,8 @@ import Indirect.Logging
 import Path (reldir, (</>))
 import Path.IO
   ( XdgDirectory (..)
-  , createDirIfMissing
   , doesFileExist
+  , ensureDir
   , executable
   , getPermissions
   , getXdgDir
@@ -46,7 +46,7 @@ installExecutable :: String -> Executable -> IO ()
 installExecutable pgname exe = do
   for_ exe.install $ \install -> do
     targets <- getTargetsDir
-    createDirIfMissing True targets
+    ensureDir targets
 
     logInfo $ "Installing " <> highlightFile magenta exe.binary
 
