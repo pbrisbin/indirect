@@ -16,7 +16,6 @@ module Indirect.Logging
 
 import Indirect.Prelude
 
-import Data.String (fromString)
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
 import Path (filename, parent)
