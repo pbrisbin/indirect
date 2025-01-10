@@ -46,52 +46,53 @@ run config = do
     List loptions -> do
       forExes loptions.only $ \name exe -> do
         link <- parseRelFile name
-        exists <- doesFileExist link
-        exeExists <- doesExecutableExist exe
+        linkExists <- doesFileExist link
+        execExists <- doesExecutableExist exe
         targets <- getTargetsDir
         let target = targets </> exe.binary
 
         T.putStrLn
           $ renderer
           $ green (fromString name)
-          <> (if exists then " => " <> cyan "indirect" else "")
-          <> (if exeExists then " => " <> highlightLinkTarget target else "")
+          <> " -> "
+          <> highlightLinkTarget target
+          <> (if linkExists then "" else red " (missing link)")
+          <> (if execExists then "" else yellow " (needs install)")
     Setup soptions -> do
       forExes soptions.only $ \name exe -> do
         link <- parseRelFile name
-        exists <- doesFileExist link
+        linkExists <- doesFileExist link
+        execExists <- doesExecutableExist exe
 
         let linkBinary = do
               logInfo
                 $ "Linking "
                 <> green (fromString name)
-                <> " => "
-                <> highlightLinkTarget options.self
-              when exists $ removeFile link
+                <> " => ./"
+                <> cyan (fromString $ toFilePath link)
+              when linkExists $ removeFile link
               createFileLink indirect link
 
-        case (exists, soptions.force, link /= indirect) of
+        case (linkExists, soptions.force, link /= indirect) of
           (_, _, False) -> pure () -- skip due to invalid link
-          (True, False, _) -> pure () -- exists, skip due to no --force
+          (True, False, _) -> pure () -- linkExists, skip due to no --force
           (_, True, True) -> linkBinary -- forcing
           (False, _, True) -> linkBinary -- missing
-        exeExists <- doesExecutableExist exe
-
-        case (exeExists, soptions.force, soptions.install) of
+        case (execExists, soptions.force, soptions.install) of
           (_, _, False) -> pure () -- skip due to --no-install
-          (True, False, _) -> pure () -- exists, skip to to no --force
+          (True, False, _) -> pure () -- linkExists, skip to to no --force
           (_, True, True) -> installExecutable name exe -- forcing
           (False, _, True) -> installExecutable name exe -- missing
     Clean coptions -> do
       forExes coptions.only $ \name exe -> do
         link <- parseRelFile name
-        exists <- doesFileExist link
-        exeExists <- doesExecutableExist exe
+        linkExists <- doesFileExist link
+        execExists <- doesExecutableExist exe
 
-        when exists $ do
+        when linkExists $ do
           logInfo $ "Removing " <> green (fromString name)
           removeFile link
 
-        when exeExists $ do
+        when execExists $ do
           logInfo $ "Removing " <> green (fromString $ toFilePath exe.binary)
           removeFile exe.binary
