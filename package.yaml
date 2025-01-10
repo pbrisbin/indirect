@@ -73,7 +73,7 @@ executables:
 tests:
   spec:
     main: Main.hs
-    source-dirs: tests
+    source-dirs: test
     ghc-options: -threaded -rtsopts "-with-rtsopts=-N"
     dependencies:
       - hspec

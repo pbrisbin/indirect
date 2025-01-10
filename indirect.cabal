@@ -103,7 +103,7 @@ test-suite spec
       Indirect.Config.ResolveSpec
       Paths_indirect
   hs-source-dirs:
-      tests
+      test
   default-extensions:
       DataKinds
       DeriveAnyClass
