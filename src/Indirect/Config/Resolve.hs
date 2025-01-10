@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- |
 --
 -- Module      : Indirect.Config.Resolve
@@ -9,6 +11,7 @@
 module Indirect.Config.Resolve
   ( resolveConfig
   , resolveExecutable
+  , getTargetsDir
   ) where
 
 import Indirect.Prelude
@@ -20,7 +23,8 @@ import Data.Semigroup (Endo (..))
 import Data.Text qualified as T
 import Indirect.Config
 import Indirect.Config.Raw
-import Path (parseRelFile)
+import Path (parseRelFile, reldir, (</>))
+import Path.IO (XdgDirectory (..), getXdgDir)
 import System.Environment (getEnvironment)
 import TOML
 
@@ -39,6 +43,7 @@ resolveConfig rc = do
 resolveExecutable :: String -> RawExecutable -> IO Executable
 resolveExecutable name re = do
   env <- map (bimap pack pack) <$> getEnvironment
+  targets <- getTargetsDir
 
   let
     vars :: [(Text, Text)]
@@ -61,12 +66,19 @@ resolveExecutable name re = do
       (pure . unpack . interpolate (binaryV : vars) . getLast)
       re.install
 
-  Executable
-    <$> parseRelFile (unpack binaryT)
-    <*> pure install
+  link <- parseRelFile name
+  binaryRel <- parseRelFile $ unpack binaryT
+  let binaryAbs = targets </> binaryRel
+
+  pure Executable {link, binaryRel, binaryAbs, install}
 
 interpolate :: [(Text, Text)] -> Text -> Text
 interpolate vs = f . f -- do it twice so that cross-referencing works
  where
   f :: Text -> Text
   f = appEndo $ foldMap (\(k, v) -> Endo $ T.replace ("${" <> k <> "}") v) vs
+
+getTargetsDir :: IO (Path Abs Dir)
+getTargetsDir = do
+  xdg <- getXdgDir XdgData $ Just [reldir|indirect|]
+  pure $ xdg </> [reldir|targets|]

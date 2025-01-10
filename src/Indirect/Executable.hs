@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 -- |
 --
 -- Module      : Indirect.Executable
@@ -9,10 +7,12 @@
 -- Stability   : experimental
 -- Portability : POSIX
 module Indirect.Executable
-  ( findExecutable
+  ( Executable (..)
+  , findExecutable
   , installExecutable
-  , doesExecutableExist
-  , getTargetsDir
+  , removeExecutable
+  , linkExecutable
+  , unlinkExecutable
   ) where
 
 import Indirect.Prelude
@@ -20,60 +20,55 @@ import Indirect.Prelude
 import Data.Map.Strict qualified as Map
 import Indirect.Config (Config (..), Executable (..))
 import Indirect.Logging
-import Path (reldir, (</>))
+import Path (parent)
 import Path.IO
-  ( XdgDirectory (..)
+  ( createFileLink
   , doesFileExist
   , ensureDir
-  , executable
-  , getPermissions
-  , getXdgDir
+  , removeFile
   , withCurrentDir
   , withSystemTempDir
   )
 import System.Process.Typed (proc, runProcess_)
 
-findExecutable :: Bool -> Config -> String -> IO (Maybe (Path Abs File))
-findExecutable autoInstall config pgname = do
-  for (Map.lookup pgname config.unwrap) $ \exe -> do
-    exists <- doesExecutableExist exe
-    unless (exists || not autoInstall) $ installExecutable pgname exe
-    targets <- getTargetsDir
-    pure $ targets </> exe.binary
+findExecutable :: Config -> String -> Maybe Executable
+findExecutable config pgname = Map.lookup pgname config.unwrap
 
-installExecutable :: String -> Executable -> IO ()
-installExecutable pgname exe = do
-  targets <- getTargetsDir
-  ensureDir targets
-
-  logInfo $ "Installing " <> highlightFile magenta exe.binary
+installExecutable :: Executable -> IO ()
+installExecutable exe = do
+  let target = exe.binaryAbs
+  ensureDir $ parent target
+  logInfo $ "Installing " <> highlightLinkTarget target
 
   withSystemTempDir "indirect.install" $ \tmp -> do
     withCurrentDir tmp $ do
-      let target = targets </> exe.binary
       runProcess_ $ proc "sh" ["-c", exe.install, "--", toFilePath target]
       created <- doesExecutableFileExist target
       unless created
         $ die
         $ "install script for "
-        <> green (fromString pgname)
+        <> highlightLinkName exe.link
         <> " did not create "
         <> highlightLinkTarget target
 
-doesExecutableExist :: Executable -> IO Bool
-doesExecutableExist exe = do
-  targets <- getTargetsDir
-  doesExecutableFileExist $ targets </> exe.binary
+removeExecutable :: Executable -> IO ()
+removeExecutable exe = do
+  logInfo $ "Removing " <> highlightLinkTarget exe.binaryAbs
+  removeFile exe.binaryAbs
 
-doesExecutableFileExist :: Path b File -> IO Bool
-doesExecutableFileExist path = do
-  exists <- doesFileExist path
+linkExecutable :: Path Rel File -> Executable -> IO ()
+linkExecutable indirect exe = do
+  logInfo
+    $ "Linking "
+    <> highlightLinkName exe.link
+    <> " => "
+    <> highlightLinkTarget indirect
 
-  if exists
-    then executable <$> getPermissions path
-    else pure False
+  linkExists <- doesFileExist exe.link
+  when linkExists $ removeFile exe.link
+  createFileLink indirect exe.link
 
-getTargetsDir :: IO (Path Abs Dir)
-getTargetsDir = do
-  xdg <- getXdgDir XdgData $ Just [reldir|indirect|]
-  pure $ xdg </> [reldir|targets|]
+unlinkExecutable :: Executable -> IO ()
+unlinkExecutable exe = do
+  logInfo $ "Removing " <> highlightLinkName exe.link
+  removeFile exe.link

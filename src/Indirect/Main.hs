@@ -23,9 +23,11 @@ main :: IO ()
 main = do
   config <- loadConfig
   pgname <- getProgName
-  findExecutable True config pgname >>= \case
+  case findExecutable config pgname of
     Nothing -> CLI.run config
     Just exe -> do
+      exists <- doesExecutableFileExist exe.binaryAbs
+      unless exists $ installExecutable exe
       args <- getArgs
-      ec <- runProcess $ proc (toFilePath exe) args
+      ec <- runProcess $ proc (toFilePath exe.binaryAbs) args
       exitWith ec

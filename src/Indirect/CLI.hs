@@ -15,16 +15,12 @@ import Indirect.Prelude
 import Data.Map.Strict qualified as Map
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
-import Indirect.Config (Config (..), Executable (..))
+import Indirect.Config (Config (..))
 import Indirect.Executable
-  ( doesExecutableExist
-  , getTargetsDir
-  , installExecutable
-  )
 import Indirect.Logging
 import Indirect.Options
-import Path (filename, parent, parseRelFile, (</>))
-import Path.IO (createFileLink, doesFileExist, removeFile, withCurrentDir)
+import Path (filename, parent)
+import Path.IO (doesFileExist, withCurrentDir)
 
 run :: Config -> IO ()
 run config = do
@@ -38,62 +34,35 @@ run config = do
     forExes only f =
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
         when (maybe True (name `elem`) $ nonEmpty only)
-          $ withCurrentDir bin
-          $ f name exe
+          $ f exe
 
-  case options.command of
+  withCurrentDir bin $ case options.command of
     List loptions -> do
-      forExes loptions.only $ \name exe -> do
-        link <- parseRelFile name
-        linkExists <- doesFileExist link
-        execExists <- doesExecutableExist exe
-        targets <- getTargetsDir
-        let target = targets </> exe.binary
+      forExes loptions.only $ \exe -> do
+        linkExists <- doesFileExist exe.link
+        execExists <- doesExecutableFileExist exe.binaryAbs
 
         T.putStrLn
           $ renderer
-          $ green (fromString name)
+          $ highlightLinkName exe.link
           <> " -> "
-          <> highlightLinkTarget target
+          <> highlightLinkTarget exe.binaryAbs
           <> (if linkExists then "" else red " (missing link)")
           <> (if execExists then "" else yellow " (needs install)")
     Setup soptions -> do
-      forExes soptions.only $ \name exe -> do
-        link <- parseRelFile name
-        linkExists <- doesFileExist link
-        execExists <- doesExecutableExist exe
+      forExes soptions.only $ \exe -> do
+        linkExists <- doesFileExist exe.link
+        execExists <- doesExecutableFileExist exe.binaryAbs
 
-        let linkBinary = do
-              logInfo
-                $ "Linking "
-                <> green (fromString name)
-                <> " => ./"
-                <> cyan (fromString $ toFilePath link)
-              when linkExists $ removeFile link
-              createFileLink indirect link
+        let
+          needsLink = exe.link /= indirect && (not linkExists || soptions.force)
+          needsInstall = soptions.install && (not execExists || soptions.force)
 
-        case (linkExists, soptions.force, link /= indirect) of
-          (_, _, False) -> pure () -- skip due to invalid link
-          (True, False, _) -> pure () -- linkExists, skip due to no --force
-          (_, True, True) -> linkBinary -- forcing
-          (False, _, True) -> linkBinary -- missing
-        case (execExists, soptions.force, soptions.install) of
-          (_, _, False) -> pure () -- skip due to --no-install
-          (True, False, _) -> pure () -- linkExists, skip to to no --force
-          (_, True, True) -> installExecutable name exe -- forcing
-          (False, _, True) -> installExecutable name exe -- missing
+        when needsLink $ linkExecutable indirect exe
+        when needsInstall $ installExecutable exe
     Clean coptions -> do
-      forExes coptions.only $ \name exe -> do
-        link <- parseRelFile name
-        linkExists <- doesFileExist link
-        execExists <- doesExecutableExist exe
-
-        when linkExists $ do
-          logInfo $ "Removing " <> green (fromString name)
-          removeFile link
-
-        when execExists $ do
-          targets <- getTargetsDir
-          let target = targets </> exe.binary
-          logInfo $ "Removing " <> highlightLinkTarget target
-          removeFile target
+      forExes coptions.only $ \exe -> do
+        linkExists <- doesFileExist exe.link
+        execExists <- doesExecutableFileExist exe.binaryAbs
+        when linkExists $ unlinkExecutable exe
+        when execExists $ removeExecutable exe
