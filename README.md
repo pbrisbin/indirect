@@ -174,6 +174,13 @@ fourmolu 0.13.1.0 9181f7e5daf4fe816adf69cdaf5c0c76dcd0a089
 using ghc-lib-parser 9.6.2.20230523
 ```
 
+## Development
+
+When developing, be sure to use `--copy-bins` and test by running the installed
+`indirect` and never `stack exec indirect`. The latter will infer a directory
+within `.stack-work` as the place to look for or install links, which you most
+likely do not want.
+
 ---
 
 Indirect is licensed AGPLv3. See [COPYING](./COPYING).
