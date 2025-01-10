@@ -104,7 +104,8 @@ use our own `setup` sub-command:
 [indirect] Linking fourmolu to /home/patrick/.local/bin/indirect
 ```
 
-> [!NOTE] > `--no-install` is used here so we can witness on-demand installation later.
+> [!NOTE]
+> `--no-install` is used here so we can witness on-demand installation later.
 > Run `indirect setup --help` for more details.
 
 ```console
