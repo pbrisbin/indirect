@@ -31,7 +31,6 @@ import Path.IO
   , withCurrentDir
   , withSystemTempDir
   )
-import System.Exit (die)
 import System.Process.Typed (proc, runProcess_)
 
 findExecutable :: Config -> String -> IO (Maybe (Path Abs File))
@@ -58,9 +57,9 @@ installExecutable pgname exe = do
         unless created
           $ die
           $ "install script for "
-          <> pgname
+          <> green (fromString pgname)
           <> " did not create "
-          <> toFilePath target
+          <> highlightLinkTarget target
 
 doesExecutableExist :: Executable -> IO Bool
 doesExecutableExist exe = do
