@@ -5,7 +5,7 @@ cabal-version: 1.18
 -- see: https://github.com/sol/hpack
 
 name:           indirect
-version:        1.1.0.0
+version:        1.2.0.0
 synopsis:       Executable to indirectly run other executables
 description:    Please see README.md
 category:       CLI
