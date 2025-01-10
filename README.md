@@ -67,15 +67,14 @@ Valid keys in any table are:
   environment variables, `name`, and `binary` are also made available for
   interpolation.
 
-- `binary`: required, relative path to expect the versioned executable target.
-  Typically, `${name}-${version}`
+- `binary`: required, relative path to name the versioned executable. Typically,
+  this would be `${name}-${version}` using a `vars.version` you define.
 
 - `install`: optional, if defined, and `binary` is not present, this will be
   executed with `sh -c` to install it.
 
-  The desired destination of the binary will be given as `$1` and if running
-  this script does not produce an executable at that location, `indirect` will
-  error.
+  The desired destination of the binary will be given as `$1`; if running this
+  script does not produce an executable at that location, `indirect` will error.
 
 ### Example
 
