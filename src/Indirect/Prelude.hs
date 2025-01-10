@@ -10,6 +10,7 @@ module Indirect.Prelude
   ( module X
   , secondM
   , note
+  , splitFilename
   , doesExecutableFileExist
   ) where
 
@@ -28,6 +29,7 @@ import Indirect.Orphans ()
 import Path as X (Abs, Dir, File, Path, Rel, toFilePath)
 import Prelude as X
 
+import Path (filename, parent)
 import Path.IO
   ( doesFileExist
   , executable
@@ -39,6 +41,9 @@ secondM = bimapM pure
 
 note :: e -> Maybe a -> Either e a
 note e = maybe (Left e) Right
+
+splitFilename :: Path b File -> (Path b Dir, Path Rel File)
+splitFilename x = (parent x, filename x)
 
 doesExecutableFileExist :: Path b File -> IO Bool
 doesExecutableFileExist path = do
