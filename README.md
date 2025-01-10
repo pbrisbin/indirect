@@ -41,7 +41,6 @@ executable, and add it to `$PATH`.
 
 [releases]: https://github.com/pbrisbin/indirect/releases
 
-
 ## User Configuration
 
 Indirect follows [XDG][], meaning user-configuration most likely occurs in
