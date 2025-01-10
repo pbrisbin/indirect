@@ -12,10 +12,9 @@ module Indirect.CLI
 
 import Indirect.Prelude
 
-import Data.Map.Strict qualified as Map
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
-import Indirect.Config (Config (..))
+import Indirect.Config (Config (..), forEachExecutable_)
 import Indirect.Executable
 import Indirect.Logging
 import Indirect.Options
@@ -33,14 +32,9 @@ run config = do
     bin = parent self
     indirect = filename self
 
-    forExes only f =
-      for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
-        when (maybe True (name `elem`) $ nonEmpty only)
-          $ f exe
-
   withCurrentDir bin $ case options.command of
     List loptions -> do
-      forExes loptions.only $ \exe -> do
+      forEachExecutable_ config loptions.only $ \exe -> do
         linkExists <- doesFileExist exe.link
         execExists <- doesExecutableFileExist exe.binaryAbs
 
@@ -52,7 +46,7 @@ run config = do
           <> (if linkExists then "" else red " (missing link)")
           <> (if execExists then "" else yellow " (needs install)")
     Setup soptions -> do
-      forExes soptions.only $ \exe -> do
+      forEachExecutable_ config soptions.only $ \exe -> do
         linkExists <- doesFileExist exe.link
         execExists <- doesExecutableFileExist exe.binaryAbs
 
@@ -63,7 +57,7 @@ run config = do
         when needsLink $ linkExecutable indirect exe
         when needsInstall $ installExecutable exe
     Clean coptions -> do
-      forExes coptions.only $ \exe -> do
+      forEachExecutable_ config coptions.only $ \exe -> do
         linkExists <- doesFileExist exe.link
         execExists <- doesExecutableFileExist exe.binaryAbs
         when linkExists $ unlinkExecutable exe

@@ -9,11 +9,13 @@
 module Indirect.Config
   ( Config (..)
   , Executable (..)
+  , forEachExecutable_
   ) where
 
 import Indirect.Prelude
 
 import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 
 newtype Config = Config
   { unwrap :: Map String Executable
@@ -30,3 +32,14 @@ data Executable = Executable
   , install :: String
   }
   deriving stock (Show, Eq)
+
+forEachExecutable_
+  :: Applicative m
+  => Config
+  -> [String]
+  -> (Executable -> m ())
+  -> m ()
+forEachExecutable_ config only f =
+  for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
+    when (maybe True (name `elem`) $ nonEmpty only)
+      $ f exe
