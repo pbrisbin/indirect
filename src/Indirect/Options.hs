@@ -12,12 +12,9 @@ module Indirect.Options
 import Indirect.Prelude
 
 import Options.Applicative
-import Path (parseAbsFile)
-import System.Environment (getExecutablePath)
 
-data Options = Options
-  { self :: Path Abs File
-  , command :: Command
+newtype Options = Options
+  { command :: Command
   }
 
 data Command
@@ -40,26 +37,10 @@ newtype CleanOptions = CleanOptions
   }
 
 parseOptions :: IO Options
-parseOptions = do
-  exe <- parseAbsFile =<< getExecutablePath
-  execParser
-    $ withInfo "Manage indirectly invokable executables"
-    $ optionsParser exe
+parseOptions = execParser $ withInfo "Manage indirectly invokable executables" optionsParser
 
-optionsParser :: Path Abs File -> Parser Options
-optionsParser exe =
-  Options
-    <$> option
-      (eitherReader $ first show . parseAbsFile)
-      ( mconcat
-          [ long "self"
-          , help "Path to indirect executable to link to"
-          , metavar "FILE"
-          , value exe
-          , internal
-          ]
-      )
-    <*> commandParser
+optionsParser :: Parser Options
+optionsParser = Options <$> commandParser
 
 commandParser :: Parser Command
 commandParser =

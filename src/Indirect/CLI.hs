@@ -19,17 +19,19 @@ import Indirect.Config (Config (..))
 import Indirect.Executable
 import Indirect.Logging
 import Indirect.Options
-import Path (filename, parent)
+import Path (filename, parent, parseAbsFile)
 import Path.IO (doesFileExist, withCurrentDir)
+import System.Environment (getExecutablePath)
 
 run :: Config -> IO ()
 run config = do
   options <- parseOptions
   renderer <- terminalRenderer
+  self <- parseAbsFile =<< getExecutablePath
 
   let
-    bin = parent options.self
-    indirect = filename options.self
+    bin = parent self
+    indirect = filename self
 
     forExes only f =
       for_ (Map.toList $ config.unwrap) $ \(name, exe) -> do
