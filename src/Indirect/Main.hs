@@ -23,7 +23,7 @@ main :: IO ()
 main = do
   config <- loadConfig
   pgname <- getProgName
-  findExecutable config pgname >>= \case
+  findExecutable True config pgname >>= \case
     Nothing -> CLI.run config
     Just exe -> do
       args <- getArgs

@@ -24,6 +24,7 @@ spec = do
         loadConfigLines
           [ "[defaults]"
           , "binary = \"${name}-${version}\""
+          , "install = \"\""
           , ""
           , "[foo]"
           , "vars.version = \"0.1.0.0\""
@@ -32,10 +33,10 @@ spec = do
           , "vars.version = \"0.2.1.0\""
           ]
 
-      foo <- findExecutable config "foo"
+      foo <- findExecutable False config "foo"
       foo `shouldBe` Just (targets </> [relfile|foo-0.1.0.0|])
 
-      bar <- findExecutable config "bar"
+      bar <- findExecutable False config "bar"
       bar `shouldBe` Just (targets </> [relfile|bar-0.2.1.0|])
 
 loadConfigLines :: [String] -> IO Config

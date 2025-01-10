@@ -22,6 +22,6 @@ newtype Config = Config
 
 data Executable = Executable
   { binary :: Path Rel File
-  , install :: Maybe String
+  , install :: String
   }
   deriving stock (Show, Eq)
