@@ -33,33 +33,32 @@ import Path.IO
   )
 import System.Process.Typed (proc, runProcess_)
 
-findExecutable :: Config -> String -> IO (Maybe (Path Abs File))
-findExecutable config pgname = do
+findExecutable :: Bool -> Config -> String -> IO (Maybe (Path Abs File))
+findExecutable autoInstall config pgname = do
   for (Map.lookup pgname config.unwrap) $ \exe -> do
     exists <- doesExecutableExist exe
-    unless exists $ installExecutable pgname exe
+    unless (exists || not autoInstall) $ installExecutable pgname exe
     targets <- getTargetsDir
     pure $ targets </> exe.binary
 
 installExecutable :: String -> Executable -> IO ()
 installExecutable pgname exe = do
-  for_ exe.install $ \install -> do
-    targets <- getTargetsDir
-    ensureDir targets
+  targets <- getTargetsDir
+  ensureDir targets
 
-    logInfo $ "Installing " <> highlightFile magenta exe.binary
+  logInfo $ "Installing " <> highlightFile magenta exe.binary
 
-    withSystemTempDir "indirect.install" $ \tmp -> do
-      withCurrentDir tmp $ do
-        let target = targets </> exe.binary
-        runProcess_ $ proc "sh" ["-c", install, "--", toFilePath target]
-        created <- doesExecutableFileExist target
-        unless created
-          $ die
-          $ "install script for "
-          <> green (fromString pgname)
-          <> " did not create "
-          <> highlightLinkTarget target
+  withSystemTempDir "indirect.install" $ \tmp -> do
+    withCurrentDir tmp $ do
+      let target = targets </> exe.binary
+      runProcess_ $ proc "sh" ["-c", exe.install, "--", toFilePath target]
+      created <- doesExecutableFileExist target
+      unless created
+        $ die
+        $ "install script for "
+        <> green (fromString pgname)
+        <> " did not create "
+        <> highlightLinkTarget target
 
 doesExecutableExist :: Executable -> IO Bool
 doesExecutableExist exe = do

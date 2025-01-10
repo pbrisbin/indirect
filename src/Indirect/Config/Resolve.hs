@@ -53,9 +53,13 @@ resolveExecutable name re = do
       (pure . interpolate vars . getLast)
       re.binary
 
-  let
-    binaryV = ("binary", binaryT)
-    install = unpack . interpolate (binaryV : vars) . getLast <$> re.install
+  let binaryV = ("binary", binaryT)
+
+  install <-
+    maybe
+      (throwIO $ DecodeError [Key "install"] MissingField)
+      (pure . unpack . interpolate (binaryV : vars) . getLast)
+      re.install
 
   Executable
     <$> parseRelFile (unpack binaryT)
