@@ -13,7 +13,6 @@ module Indirect.CLI
 import Indirect.Prelude
 
 import Data.Map.Strict qualified as Map
-import Data.String (fromString)
 import Data.Text.Escaped
 import Data.Text.IO qualified as T
 import Indirect.Config (Config (..), Executable (..))
