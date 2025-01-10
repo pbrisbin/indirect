@@ -18,7 +18,7 @@ import Indirect.Config (Config (..), forEachExecutable_)
 import Indirect.Executable
 import Indirect.Logging
 import Indirect.Options
-import Path (filename, parent, parseAbsFile)
+import Path (parseAbsFile)
 import Path.IO (doesFileExist, withCurrentDir)
 import System.Environment (getExecutablePath)
 
@@ -26,11 +26,7 @@ run :: Config -> IO ()
 run config = do
   options <- parseOptions
   renderer <- terminalRenderer
-  self <- parseAbsFile =<< getExecutablePath
-
-  let
-    bin = parent self
-    indirect = filename self
+  (bin, indirect) <- fmap splitFilename . parseAbsFile =<< getExecutablePath
 
   withCurrentDir bin $ case options.command of
     List loptions -> do
