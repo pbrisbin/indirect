@@ -33,11 +33,11 @@ spec = do
           , "vars.version = \"0.2.1.0\""
           ]
 
-      foo <- findExecutable False config "foo"
-      foo `shouldBe` Just (targets </> [relfile|foo-0.1.0.0|])
+      fmap (.binaryAbs) (findExecutable config "foo")
+        `shouldBe` Just (targets </> [relfile|foo-0.1.0.0|])
 
-      bar <- findExecutable False config "bar"
-      bar `shouldBe` Just (targets </> [relfile|bar-0.2.1.0|])
+      fmap (.binaryAbs) (findExecutable config "bar")
+        `shouldBe` Just (targets </> [relfile|bar-0.2.1.0|])
 
 loadConfigLines :: [String] -> IO Config
 loadConfigLines xs =

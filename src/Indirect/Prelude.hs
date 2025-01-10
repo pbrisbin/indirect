@@ -10,6 +10,7 @@ module Indirect.Prelude
   ( module X
   , secondM
   , note
+  , doesExecutableFileExist
   ) where
 
 import Control.Monad as X (guard, unless, void, when)
@@ -27,8 +28,22 @@ import Indirect.Orphans ()
 import Path as X (Abs, Dir, File, Path, Rel, toFilePath)
 import Prelude as X
 
+import Path.IO
+  ( doesFileExist
+  , executable
+  , getPermissions
+  )
+
 secondM :: Applicative f => (b -> f c) -> (a, b) -> f (a, c)
 secondM = bimapM pure
 
 note :: e -> Maybe a -> Either e a
 note e = maybe (Left e) Right
+
+doesExecutableFileExist :: Path b File -> IO Bool
+doesExecutableFileExist path = do
+  exists <- doesFileExist path
+
+  if exists
+    then executable <$> getPermissions path
+    else pure False
